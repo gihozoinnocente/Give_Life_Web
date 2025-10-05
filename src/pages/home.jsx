@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X } from 'lucide-react';
 
 function Home() {
@@ -6,6 +7,24 @@ function Home() {
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setRegisterDropdownOpen(false);
+      }
+    };
+
+    if (registerDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [registerDropdownOpen]);
 
   const collaborators = [
     'RBC',
@@ -59,7 +78,7 @@ function Home() {
               <a href="#find-blood" className="text-gray-600 hover:text-gray-900 transition">
                 Find Blood
               </a>
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
                   className="flex items-center text-gray-600 hover:text-gray-900 transition"
@@ -68,13 +87,21 @@ function Home() {
                   <ChevronDown className="ml-1 w-4 h-4" />
                 </button>
                 {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                    <a href="#register-donor" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                    <Link 
+                      to="/register-donor" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
+                      onClick={() => setRegisterDropdownOpen(false)}
+                    >
                       Register as Donor
-                    </a>
-                    <a href="#register-recipient" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                    </Link>
+                    <Link 
+                      to="/register-recipient" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
+                      onClick={() => setRegisterDropdownOpen(false)}
+                    >
                       Register as Recipient
-                    </a>
+                    </Link>
                   </div>
                 )}
               </div>

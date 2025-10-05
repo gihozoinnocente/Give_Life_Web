@@ -24,7 +24,6 @@ function RegisterDonor() {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const districts = ['Gasabo', 'Kicukiro', 'Nyarugenge', 'Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Ngoma', 'Rwamagana'];
   const states = ['Kigali City', 'Eastern Province', 'Northern Province', 'Southern Province', 'Western Province'];
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

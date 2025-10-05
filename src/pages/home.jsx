@@ -108,9 +108,11 @@ function Home() {
             </div>
 
             <div className="hidden md:block">
-              <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                Log In
-              </button>
+              <Link to="/login">
+                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
+                  Log In
+                </button>
+              </Link>
             </div>
 
             <button
@@ -127,9 +129,11 @@ function Home() {
               <a href="#about" className="block text-gray-600">About Us</a>
               <Link to="/find-blood" className="block text-gray-600">Find Blood</Link>
               <a href="#register" className="block text-gray-600">Register Now</a>
-              <button className="w-full px-6 py-2 border-2 border-gray-900 text-gray-900 rounded">
-                Log In
-              </button>
+              <Link to="/login" className="w-full">
+                <button className="w-full px-6 py-2 border-2 border-gray-900 text-gray-900 rounded">
+                  Log In
+                </button>
+              </Link>
             </div>
           )}
         </nav>

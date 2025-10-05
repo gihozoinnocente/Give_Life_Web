@@ -96,11 +96,11 @@ function Home() {
                       Register as Donor
                     </Link>
                     <Link 
-                      to="/register-recipient" 
+                      to="/register-hospital" 
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
                       onClick={() => setRegisterDropdownOpen(false)}
                     >
-                      Register as Recipient
+                      Register as Hospital
                     </Link>
                   </div>
                 )}

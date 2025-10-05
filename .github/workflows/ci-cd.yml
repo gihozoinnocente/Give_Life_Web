@@ -45,7 +45,7 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     permissions:
       contents: read
@@ -71,9 +71,11 @@ jobs:
     
     - name: Build application
       run: npm run build
+      env:
+        NODE_ENV: production
     
     - name: Setup Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v5
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3

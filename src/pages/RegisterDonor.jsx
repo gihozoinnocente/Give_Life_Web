@@ -83,9 +83,11 @@ function RegisterDonor() {
             </div>
 
             <div className="hidden md:block">
-              <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                Log In
-              </button>
+              <Link to="/login">
+                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
+                  Log In
+                </button>
+              </Link>
             </div>
           </div>
         </nav>

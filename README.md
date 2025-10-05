@@ -5,6 +5,9 @@
 
 A modern web application for blood donation management built with React, Vite, and Tailwind CSS.
 
+## Figma Design 
+Link to the Figma Design: https://www.figma.com/design/E5HbiRdTzTFKeVkljfTHyj/Give-Life?node-id=0-1&p=f&m=draw
+
 ## Live Demo
 Visit the live application: [https://gihozoinnocente.github.io/Give_Life_Web/](https://gihozoinnocente.github.io/Give_Life_Web/)
 

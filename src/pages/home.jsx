@@ -64,7 +64,7 @@ function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full">hu</div>
+                <div className="w-4 h-4 bg-white rounded-full"></div>
               </div>
             </div>
 
@@ -72,9 +72,9 @@ function Home() {
               <a href="#home" className="text-gray-900 font-medium border-b-2 border-red-700 pb-1">
                 Home
               </a>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
+              <Link to="/about" className="text-gray-600 hover:text-gray-900 transition">
                 About Us
-              </a>
+              </Link>
               <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
                 Find Blood
               </Link>
@@ -126,7 +126,7 @@ function Home() {
           {mobileMenuOpen && (
             <div className="md:hidden pb-4 space-y-3">
               <a href="#home" className="block text-gray-900 font-medium">Home</a>
-              <a href="#about" className="block text-gray-600">About Us</a>
+              <Link to="/about" className="block text-gray-600">About Us</Link>
               <Link to="/find-blood" className="block text-gray-600">Find Blood</Link>
               <a href="#register" className="block text-gray-600">Register Now</a>
               <Link to="/login" className="w-full">

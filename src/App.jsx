@@ -4,6 +4,7 @@ import RegisterDonor from './pages/RegisterDonor'
 import RegisterHospital from './pages/RegisterHospital'
 import FindBlood from './pages/FindBlood'
 import Login from './pages/Login'
+import AboutUs from './pages/AboutUs'
 import './App.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/register-hospital" element={<RegisterHospital />} />
         <Route path="/find-blood" element={<FindBlood />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<AboutUs />} />
       </Routes>
     </Router>
   )

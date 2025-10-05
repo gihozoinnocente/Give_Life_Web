@@ -1,10 +1,10 @@
-name: CI/CD Pipeline
+name: Deploy React Vite App
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build-and-test:
@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
     
     steps:
     - name: Checkout code
@@ -31,14 +31,15 @@ jobs:
       run: npm run lint
       continue-on-error: true
     
-    - name: Build application
+    - name: Build Vite application
       run: npm run build
+      env:
+        NODE_ENV: production
     
     - name: Upload build artifacts
-      if: matrix.node-version == '20.x'
       uses: actions/upload-artifact@v4
       with:
-        name: dist
+        name: vite-dist
         path: dist/
         retention-days: 7
 
@@ -69,15 +70,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Build application
+    - name: Build Vite application
       run: npm run build
       env:
         NODE_ENV: production
     
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
+    - name: Setup GitHub Pages
+      uses: actions/configure-pages@v4
     
-    - name: Upload artifact
+    - name: Upload artifact to Pages
       uses: actions/upload-pages-artifact@v3
       with:
         path: './dist'

@@ -74,8 +74,8 @@ function RegisterDonor() {
                     <Link to="/register-donor" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
                       Register as Donor
                     </Link>
-                    <Link to="/register-recipient" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
-                      Register as Recipient
+                    <Link to="/register-hospital" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      Register as Hospital
                     </Link>
                   </div>
                 )}

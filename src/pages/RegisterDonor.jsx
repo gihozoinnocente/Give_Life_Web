@@ -58,9 +58,9 @@ function RegisterDonor() {
               <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
                 About Us
               </a>
-              <a href="#find-blood" className="text-gray-600 hover:text-gray-900 transition">
+              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
                 Find Blood
-              </a>
+              </Link>
               <div className="relative">
                 <button
                   onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}

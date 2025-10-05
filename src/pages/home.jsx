@@ -75,9 +75,9 @@ function Home() {
               <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
                 About Us
               </a>
-              <a href="#find-blood" className="text-gray-600 hover:text-gray-900 transition">
+              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
                 Find Blood
-              </a>
+              </Link>
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
@@ -125,7 +125,7 @@ function Home() {
             <div className="md:hidden pb-4 space-y-3">
               <a href="#home" className="block text-gray-900 font-medium">Home</a>
               <a href="#about" className="block text-gray-600">About Us</a>
-              <a href="#find-blood" className="block text-gray-600">Find Blood</a>
+              <Link to="/find-blood" className="block text-gray-600">Find Blood</Link>
               <a href="#register" className="block text-gray-600">Register Now</a>
               <button className="w-full px-6 py-2 border-2 border-gray-900 text-gray-900 rounded">
                 Log In

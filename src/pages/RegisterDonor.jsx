@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronDown, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { ChevronDown, CheckCircle, AlertCircle } from 'lucide-react';
+import { registerDonor, reset } from '../features/auth/authSlice';
+import Navbar from '../components/Navbar';
 
 function RegisterDonor() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phoneNumber: '',
     email: '',
+    password: '',
     address: '',
     age: '',
     bloodGroup: '',
@@ -20,6 +27,22 @@ function RegisterDonor() {
   });
 
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      // Error is already displayed in the UI
+    }
+
+    if (isSuccess) {
+      navigate('/login');
+    }
+
+    dispatch(reset());
+  }, [user, isError, isSuccess, message, navigate, dispatch]);
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const districts = ['Gasabo', 'Kicukiro', 'Nyarugenge', 'Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Ngoma', 'Rwamagana'];
@@ -35,63 +58,27 @@ function RegisterDonor() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Registration submitted successfully!');
+    
+    const donorData = {
+      email: formData.email,
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phoneNumber: formData.phoneNumber,
+      address: formData.address,
+      age: parseInt(formData.age),
+      bloodGroup: formData.bloodGroup,
+      district: formData.district,
+      state: formData.state,
+      pinCode: formData.pinCode,
+    };
+
+    dispatch(registerDonor(donorData));
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
-                Home
-              </Link>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </a>
-              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
-                Find Blood
-              </Link>
-              <div className="relative">
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-900 font-medium border-b-2 border-red-700 pb-1"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link to="/register-donor" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
-                      Register as Donor
-                    </Link>
-                    <Link to="/register-hospital" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <Link to="/login">
-                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                  Log In
-                </button>
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-rose-900 to-pink-600 py-12 px-4">
@@ -103,6 +90,13 @@ function RegisterDonor() {
       {/* Form Section */}
       <div className="max-w-4xl mx-auto px-4 py-12">
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 space-y-6">
+          {/* Error Message */}
+          {isError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{message}</span>
+            </div>
+          )}
           {/* Full Name */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -155,6 +149,21 @@ function RegisterDonor() {
               placeholder="Mail_Id"
               className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               required
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter a secure password"
+              className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              required
+              minLength="6"
             />
           </div>
 
@@ -306,10 +315,23 @@ function RegisterDonor() {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              className="flex items-center space-x-2 bg-white border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition"
+              disabled={isLoading}
+              className="flex items-center space-x-2 bg-white border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Submit</span>
-              <CheckCircle className="w-5 h-5" />
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Registering...</span>
+                </>
+              ) : (
+                <>
+                  <span>Submit</span>
+                  <CheckCircle className="w-5 h-5" />
+                </>
+              )}
             </button>
           </div>
         </form>

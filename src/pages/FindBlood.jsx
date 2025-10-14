@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Phone, RefreshCw, AlertTriangle } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
 function FindBlood() {
   const [activeTab, setActiveTab] = useState('donors');
@@ -45,65 +46,7 @@ function FindBlood() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
-                Home
-              </Link>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </a>
-              <Link to="/find-blood" className="text-gray-900 font-medium border-b-2 border-gray-900 pb-1">
-                Find Blood
-              </Link>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link 
-                      to="/register-donor" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Donor
-                    </Link>
-                    <Link 
-                      to="/register-hospital" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <Link to="/login">
-                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                  Log In
-                </button>
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
 function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,12 +42,12 @@ function Home() {
     {
       number: 2,
       title: 'Find Location',
-      description: 'Locate the nearest blood donation center or mobile unit.'
+      description: 'Locate the nearest hospital.'
     },
     {
       number: 3,
       title: 'Donate Blood',
-      description: 'Visit the center and save lives with your generous donation.'
+      description: 'Visit the hospital and save lives with your generous donation.'
     }
   ];
 
@@ -59,85 +60,9 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#home" className="text-gray-900 font-medium border-b-2 border-red-700 pb-1">
-                Home
-              </a>
-              <Link to="/about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </Link>
-              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
-                Find Blood
-              </Link>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link 
-                      to="/register-donor" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Donor
-                    </Link>
-                    <Link 
-                      to="/register-hospital" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <Link to="/login">
-                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                  Log In
-                </button>
-              </Link>
-            </div>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4 space-y-3">
-              <a href="#home" className="block text-gray-900 font-medium">Home</a>
-              <Link to="/about" className="block text-gray-600">About Us</Link>
-              <Link to="/find-blood" className="block text-gray-600">Find Blood</Link>
-              <a href="#register" className="block text-gray-600">Register Now</a>
-              <Link to="/login" className="w-full">
-                <button className="w-full px-6 py-2 border-2 border-gray-900 text-gray-900 rounded">
-                  Log In
-                </button>
-              </Link>
-            </div>
-          )}
-        </nav>
-      </header>
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
 
       <section className="relative pt-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,7 +88,7 @@ function Home() {
                 Your donation can save up to three lives. Join thousands of heroes across Africa who are committed to making a difference. Every drop counts in our mission to ensure no patient waits for life-saving blood.
               </p>
               <button className="bg-black text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition shadow-lg">
-                Get Blood Now
+                Explore Our Web
               </button>
             </div>
           </div>

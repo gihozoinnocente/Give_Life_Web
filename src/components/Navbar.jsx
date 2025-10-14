@@ -1,0 +1,124 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { ChevronDown, User, LogOut, Bell } from 'lucide-react';
+import { logout } from '../features/auth/authSlice';
+
+function Navbar() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setProfileDropdownOpen(false);
+    navigate('/login');
+  };
+
+  return (
+    <header className="bg-white shadow-sm">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <Link to="/" className="flex items-center">
+            <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rounded-full"></div>
+            </div>
+          </Link>
+
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
+              Home
+            </Link>
+            <Link to="/about" className="text-gray-600 hover:text-gray-900 transition">
+              About Us
+            </Link>
+            {isAuthenticated && user && (
+              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
+                Find Blood
+              </Link>
+            )}
+            {!isAuthenticated && !user && (
+              <div className="relative">
+                <button
+                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
+                >
+                  Register Now
+                  <ChevronDown className="ml-1 w-4 h-4" />
+                </button>
+                {registerDropdownOpen && (
+                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                    <Link 
+                      to="/register-donor" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
+                      onClick={() => setRegisterDropdownOpen(false)}
+                    >
+                      Register as Donor
+                    </Link>
+                    <Link 
+                      to="/register-hospital" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
+                      onClick={() => setRegisterDropdownOpen(false)}
+                    >
+                      Register as Hospital
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {isAuthenticated && user ? (
+              <>
+                <button className="p-2 text-gray-600 hover:text-gray-900 transition relative">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
+                  >
+                    <User className="w-5 h-5 text-gray-700" />
+                  </button>
+                  
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                      <Link
+                        to="/profile"
+                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <Link to="/login">
+                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
+                  Log In
+                </button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
+export default Navbar;

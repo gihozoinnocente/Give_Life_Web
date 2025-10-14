@@ -5,6 +5,8 @@ import RegisterHospital from './pages/RegisterHospital'
 import FindBlood from './pages/FindBlood'
 import Login from './pages/Login'
 import AboutUs from './pages/AboutUs'
+import Profile from './pages/Profile'
+import EditProfile from './pages/EditProfile'
 import './App.css'
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
         <Route path="/find-blood" element={<FindBlood />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>
     </Router>
   )

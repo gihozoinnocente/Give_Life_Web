@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChevronDown, User, LogOut, Bell } from 'lucide-react';
 import { logout } from '../features/auth/authSlice';
+import { fetchUnreadCount } from '../features/notifications/notificationSlice';
+import Notifications from './Notifications';
 
 function Navbar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { unreadCount } = useSelector((state) => state.notifications);
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      dispatch(fetchUnreadCount(user.id));
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(() => {
+        dispatch(fetchUnreadCount(user.id));
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -35,9 +50,21 @@ function Navbar() {
               About Us
             </Link>
             {isAuthenticated && user && (
-              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
-                Find Blood
-              </Link>
+              <>
+                {user.role === 'hospital' && (
+                  <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 transition">
+                    Dashboard
+                  </Link>
+                )}
+                <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
+                  Find Blood
+                </Link>
+                {user.role === 'hospital' && (
+                  <Link to="/hospital/request-blood" className="text-red-700 hover:text-red-800 transition font-medium">
+                    Request Blood
+                  </Link>
+                )}
+              </>
             )}
             {!isAuthenticated && !user && (
               <div className="relative">
@@ -73,9 +100,16 @@ function Navbar() {
           <div className="flex items-center space-x-4">
             {isAuthenticated && user ? (
               <>
-                <button className="p-2 text-gray-600 hover:text-gray-900 transition relative">
+                <button 
+                  onClick={() => setNotificationsOpen(true)}
+                  className="p-2 text-gray-600 hover:text-gray-900 transition relative"
+                >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </button>
                 
                 <div className="relative">
@@ -117,6 +151,12 @@ function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Notifications Panel */}
+      <Notifications 
+        isOpen={notificationsOpen} 
+        onClose={() => setNotificationsOpen(false)} 
+      />
     </header>
   );
 }

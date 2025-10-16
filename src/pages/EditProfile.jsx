@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import authService from '../services/authService';
+import { login } from '../features/auth/authSlice';
 
 function EditProfile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -36,12 +41,32 @@ function EditProfile() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement update profile API call
-    console.log('Updated profile data:', formData);
-    alert('Profile updated successfully!');
-    navigate('/profile');
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      // Call API to update profile
+      const updatedProfile = await authService.updateProfile(formData);
+      
+      // Update Redux store with new user data
+      const updatedUser = { ...user, ...updatedProfile };
+      dispatch(login({ user: updatedUser, token: localStorage.getItem('token') }));
+      
+      setSuccess(true);
+      
+      // Redirect to profile after 2 seconds
+      setTimeout(() => {
+        navigate('/profile');
+      }, 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+      console.error('Error updating profile:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!user) {
@@ -247,13 +272,36 @@ function EditProfile() {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-800">
+                <p className="font-medium">Error</p>
+                <p>{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-green-800">
+                <p className="font-medium">Success!</p>
+                <p>Profile updated successfully. Redirecting...</p>
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
           <div className="flex justify-end pt-8">
             <button
               type="submit"
-              className="flex items-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition"
+              className="flex items-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              <span>Submit</span>
+              <span>{isLoading ? 'Updating...' : 'Submit'}</span>
               <CheckCircle className="w-5 h-5" />
             </button>
           </div>

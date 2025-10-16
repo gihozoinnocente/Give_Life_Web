@@ -145,6 +145,30 @@ class AuthService {
     return data.data;
   }
 
+  // Update User Profile
+  async updateProfile(profileData) {
+    const response = await fetch(`${API_URL}${API_ENDPOINTS.UPDATE_PROFILE}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(profileData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update profile');
+    }
+
+    // Update user in localStorage
+    if (data.data) {
+      const currentUser = this.getCurrentUser();
+      const updatedUser = { ...currentUser, ...data.data };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+
+    return data.data;
+  }
+
   // Logout
   logout() {
     localStorage.removeItem('token');

@@ -51,18 +51,31 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-red-700 to-red-600 rounded-lg shadow-lg p-8 text-white mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-red-700" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-red-700" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">
+                  Welcome back, {user.firstName || user.hospitalName || 'User'}!
+                </h1>
+                <p className="text-red-100 mt-1">
+                  Role: <span className="font-semibold capitalize">{user.role}</span>
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">
-                Welcome back, {user.firstName || user.hospitalName || 'User'}!
-              </h1>
-              <p className="text-red-100 mt-1">
-                Role: <span className="font-semibold capitalize">{user.role}</span>
-              </p>
-            </div>
+            
+            {/* Hospital Request Blood Button */}
+            {user.role === 'hospital' && (
+              <Link
+                to="/hospital/request-blood"
+                className="flex items-center space-x-2 bg-white text-red-700 px-6 py-3 rounded-lg font-semibold hover:bg-red-50 transition shadow-lg"
+              >
+                <Bell className="w-5 h-5" />
+                <span>Request Blood</span>
+              </Link>
+            )}
           </div>
         </div>
 

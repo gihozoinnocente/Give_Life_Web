@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X } from 'lucide-react';
+import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X, MapPin, Phone, Clock } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 function Home() {
@@ -48,6 +48,41 @@ function Home() {
       number: 3,
       title: 'Donate Blood',
       description: 'Visit the hospital and save lives with your generous donation.'
+    }
+  ];
+
+  const hospitals = [
+    {
+      name: 'King Faisal Hospital',
+      location: 'Kigali, Gasabo',
+      phone: '+250 788 123 456',
+      hours: '24/7 Emergency',
+      bloodTypes: ['A+', 'B+', 'O+', 'AB+'],
+      image: '/images/hospital1.jpg'
+    },
+    {
+      name: 'CHUK Hospital',
+      location: 'Kigali, Nyarugenge',
+      phone: '+250 788 234 567',
+      hours: 'Mon-Fri: 8AM-5PM',
+      bloodTypes: ['A-', 'B-', 'O-', 'AB-'],
+      image: '/images/hospital2.jpg'
+    },
+    {
+      name: 'Rwanda Military Hospital',
+      location: 'Kigali, Kicukiro',
+      phone: '+250 788 345 678',
+      hours: '24/7 Emergency',
+      bloodTypes: ['A+', 'O+', 'B+', 'O-'],
+      image: '/images/hospital3.jpg'
+    },
+    {
+      name: 'Kibagabaga Hospital',
+      location: 'Kigali, Gasabo',
+      phone: '+250 788 456 789',
+      hours: 'Mon-Sat: 7AM-6PM',
+      bloodTypes: ['AB+', 'A+', 'B-', 'O+'],
+      image: '/images/hospital4.jpg'
     }
   ];
 
@@ -172,6 +207,87 @@ function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Hospitals Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner Hospitals</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Find a hospital near you and make your life-saving donation today. Our partner hospitals are equipped and ready to receive your generous contribution.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {hospitals.map((hospital, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                {/* Hospital Image */}
+                <div className="h-48 bg-gradient-to-br from-red-900 to-pink-700 flex items-center justify-center">
+                  <div className="text-white text-center p-6">
+                    <Heart className="w-16 h-16 mx-auto mb-2 fill-white" />
+                    <p className="text-sm font-medium">Blood Donation Center</p>
+                  </div>
+                </div>
+
+                {/* Hospital Info */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{hospital.name}</h3>
+                  
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.location}</span>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Phone className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.phone}</span>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Clock className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.hours}</span>
+                    </div>
+                  </div>
+
+                  {/* Blood Types */}
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">Available Blood Types:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {hospital.bloodTypes.map((type, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-semibold"
+                        >
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <Link
+                    to="/find-blood"
+                    className="block w-full text-center bg-red-700 text-white py-2 rounded-lg font-medium hover:bg-red-800 transition"
+                  >
+                    Visit Hospital
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* View All Button */}
+          <div className="text-center mt-12">
+            <Link
+              to="/find-blood"
+              className="inline-block bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
+              View All Hospitals
+            </Link>
           </div>
         </div>
       </section>

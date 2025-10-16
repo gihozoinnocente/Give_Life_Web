@@ -20,6 +20,78 @@ function RegisterHospital() {
 
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
 
+  // Hospital list organized by province
+  const hospitals = {
+    'Kigali City': [
+      'University Teaching Hospital of Kigali (CHUK)',
+      'Hopital la Croix du Sud (HCS)',
+      'Kacyiru Police Hospital',
+      'Frontier Diagnostic Center',
+      'Muhima Hospital',
+      'Kibagabaga Hospital',
+      'Rwanda Military Referral and Teaching Hospital',
+      'King Faisal Hospital Kigali',
+      'Ndera Neuropsychiatric Teaching Hospital',
+      'Masaka Hospital',
+      'Nyarugenge Hospital',
+      'WIWO Specialized Hospital',
+      'BAHO International hospital'
+    ],
+    'Eastern Province': [
+      'Rwinkwavu Hospital',
+      'Kirehe Hospital',
+      'Kibungo Hospital',
+      'Nyagatare Hospital',
+      'Gatunda Hospital',
+      'Gahini Hospital',
+      'Rilima Pediatric Orthopedic Hospital',
+      'Nyamata Hospital',
+      'Ngarama District Hospital',
+      'Kiziguro Hospital',
+      'Rwamagana Hospital'
+    ],
+    'Western Province': [
+      'Kirinda Hospital',
+      'Kibuye Hospital',
+      'Shyira Hospital',
+      'Murunda Hospital',
+      'Kabaya Hospital',
+      'Gisenyi Hospital',
+      'Mibilizi Hospital',
+      'Kibogora Hospital',
+      'Muhororo Hospital',
+      'Gihundwe Hospital',
+      'Bushenge Hospital',
+      'Mugonero Hospital'
+    ],
+    'Northern Province': [
+      'Ruhengeri Hospital',
+      'Rutongo Hospital',
+      'Butaro Hospital',
+      'Byumba Hospital',
+      'Ruli Hospital',
+      'Nemba Hospital',
+      'Kinihira Hospital',
+      'Gatonde Hospital'
+    ],
+    'Southern Province': [
+      'Kabgayi Hospital',
+      'Kaduha Hospital',
+      'Kibilizi Hospital',
+      'Gitwe Hospital',
+      'Nyabikenke Hospital',
+      'Nyanza Hospital',
+      'Munini Hospital',
+      'Kigeme Hospital',
+      'Gakoma Hospital',
+      'Kabutare Hospital',
+      'Remera-Rukoma Hospital',
+      'University Teaching Hospital of Butare (CHUB)',
+      'Ruhango Hospital',
+      'HVP Gatagara Orthopedic and Rehabilitation Hospital'
+    ]
+  };
+
   const { user, isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
@@ -123,15 +195,24 @@ function RegisterHospital() {
               Hospital Name
             </label>
             <div className="md:col-span-2">
-              <input
-                type="text"
+              <select
                 name="hospitalName"
                 value={formData.hospitalName}
                 onChange={handleChange}
-                placeholder="Name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
                 required
-              />
+              >
+                <option value="">Select a hospital</option>
+                {Object.entries(hospitals).map(([province, hospitalList]) => (
+                  <optgroup key={province} label={province}>
+                    {hospitalList.map((hospital) => (
+                      <option key={hospital} value={hospital}>
+                        {hospital}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
           </div>
 

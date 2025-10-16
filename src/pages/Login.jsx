@@ -24,7 +24,12 @@ function Login() {
     }
 
     if (isSuccess || user) {
-      navigate('/');
+      // Redirect hospital users to dashboard, others to home
+      if (user && user.role === 'hospital') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
     }
 
     dispatch(reset());

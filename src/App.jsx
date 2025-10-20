@@ -9,6 +9,7 @@ import Profile from './pages/Profile'
 import EditProfile from './pages/EditProfile'
 import Dashboard from './pages/Dashboard'
 import HospitalBloodRequest from './pages/HospitalBloodRequest'
+import NearbyHospitals from './pages/NearbyHospitals'
 import './App.css'
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/hospital/request-blood" element={<HospitalBloodRequest />} />
+        <Route path="/nearby-hospitals" element={<NearbyHospitals />} />
       </Routes>
     </Router>
   )

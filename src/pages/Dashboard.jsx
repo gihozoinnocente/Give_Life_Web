@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { User, LogOut, Heart, Calendar, Award, Bell } from 'lucide-react';
+import { User, LogOut, Heart, Calendar, Award, Bell, MapPin, Navigation } from 'lucide-react';
 import { logout } from '../features/auth/authSlice';
 
 function Dashboard() {
@@ -78,6 +78,29 @@ function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Donor Map Feature Card */}
+        {user.role === 'donor' && (
+          <Link
+            to="/nearby-hospitals"
+            className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg shadow-lg p-6 text-white mb-8 hover:shadow-xl transition group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:scale-110 transition">
+                  <MapPin className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">Find Nearby Hospitals</h2>
+                  <p className="text-blue-100">
+                    View blood donation centers on an interactive map
+                  </p>
+                </div>
+              </div>
+              <Navigation className="w-8 h-8 group-hover:translate-x-1 transition" />
+            </div>
+          </Link>
+        )}
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

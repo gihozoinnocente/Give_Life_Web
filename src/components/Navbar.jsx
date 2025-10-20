@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, User, LogOut, Bell } from 'lucide-react';
+import { ChevronDown, User, LogOut, Bell, MapPin } from 'lucide-react';
 import { logout } from '../features/auth/authSlice';
 import { fetchUnreadCount } from '../features/notifications/notificationSlice';
 import Notifications from './Notifications';
@@ -59,6 +59,12 @@ function Navbar() {
                 <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
                   Find Blood
                 </Link>
+                {user.role === 'donor' && (
+                  <Link to="/nearby-hospitals" className="text-gray-600 hover:text-gray-900 transition flex items-center space-x-1">
+                    <MapPin className="w-4 h-4" />
+                    <span>Nearby Hospitals</span>
+                  </Link>
+                )}
                 {user.role === 'hospital' && (
                   <Link to="/hospital/request-blood" className="text-red-700 hover:text-red-800 transition font-medium">
                     Request Blood

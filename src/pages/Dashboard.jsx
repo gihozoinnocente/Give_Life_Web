@@ -14,6 +14,15 @@ function Dashboard() {
     navigate('/login');
   };
 
+  // Redirect users to their respective dashboards
+  useEffect(() => {
+    if (user && user.role === 'hospital') {
+      navigate('/hospital/dashboard');
+    } else if (user && user.role === 'donor') {
+      navigate('/donor/dashboard');
+    }
+  }, [user, navigate]);
+
   if (!user) {
     return null;
   }

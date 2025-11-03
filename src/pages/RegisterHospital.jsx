@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChevronDown, CheckCircle, AlertCircle } from 'lucide-react';
+import { useToast } from '../components/ToastProvider.jsx';
 import { registerHospital, reset } from '../features/auth/authSlice';
 import Navbar from '../components/Navbar';
 
@@ -95,18 +96,20 @@ function RegisterHospital() {
   const { user, isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
+  const toast = useToast();
 
   useEffect(() => {
-    if (isError) {
-      // Error is already displayed in the UI
+    if (isError && message) {
+      toast.error(message);
     }
 
     if (isSuccess) {
+      toast.success('Hospital registered successfully. You can now log in.');
       navigate('/login');
     }
 
     dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [user, isError, isSuccess, message, navigate, dispatch, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -145,13 +148,7 @@ function RegisterHospital() {
       {/* Registration Form */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-8 space-y-8">
-          {/* Error Message */}
-          {isError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm">{message}</span>
-            </div>
-          )}
+          {/* Toasts handle error/success messages */}
           {/* Email */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             <label className="text-gray-700 font-medium pt-2">
@@ -271,11 +268,11 @@ function RegisterHospital() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-start pt-4">
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center space-x-2 bg-white border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow"
             >
               {isLoading ? (
                 <>

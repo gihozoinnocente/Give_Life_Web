@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { MapPin, Navigation, Phone, Clock, X, Loader, AlertCircle, Hospital } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import hospitalService from '../services/hospitalService';
 
 const mapContainerStyle = {
@@ -72,10 +71,12 @@ function NearbyHospitals() {
     const fetchHospitals = async () => {
       try {
         setIsLoading(true);
-        const response = await hospitalService.getAllHospitals();
+        const result = await hospitalService.getAllHospitals();
+        // Support both { status, data: [...] } and raw array responses
+        const list = Array.isArray(result) ? result : (result?.data || []);
         
         // Transform hospital data to include coordinates
-        const hospitalsWithCoords = response.data.map(hospital => ({
+        const hospitalsWithCoords = list.map(hospital => ({
           ...hospital,
           // You'll need to geocode addresses or store lat/lng in the database
           // For now, using mock coordinates around Kigali
@@ -156,18 +157,22 @@ function NearbyHospitals() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-700 to-pink-600 py-8 px-4 shadow-lg">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center space-x-3 mb-2">
-            <MapPin className="w-8 h-8 text-white" />
-            <h1 className="text-3xl font-bold text-white">Nearby Hospitals</h1>
+      <div className="relative mx-4 mt-6 rounded-2xl overflow-hidden shadow-xl bg-gradient-to-r from-red-700 via-rose-600 to-pink-600">
+        {/* Decorative blobs */}
+        <div className="pointer-events-none absolute -top-10 -left-10 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="relative">
+          <div className="max-w-7xl mx-auto px-6 py-10">
+            <div className="flex items-center space-x-4 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shadow">
+                <MapPin className="w-7 h-7 text-white" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Nearby Hospitals</h1>
+            </div>
+            <p className="text-rose-50/90 text-base md:text-lg">Find blood donation centers and hospitals near you</p>
           </div>
-          <p className="text-red-100">
-            Find blood donation centers and hospitals near you
-          </p>
         </div>
       </div>
 

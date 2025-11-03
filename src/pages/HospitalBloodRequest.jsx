@@ -61,20 +61,10 @@ function HospitalBloodRequest() {
       
       setShowSuccess(true);
       
-      // Reset form after 3 seconds
+      // Redirect to dashboard after 2 seconds to see the updated stats
       setTimeout(() => {
-        setShowSuccess(false);
-        setFormData({
-          bloodType: '',
-          urgency: 'normal',
-          unitsNeeded: '',
-          patientCondition: '',
-          contactPerson: '',
-          contactPhone: '',
-          additionalNotes: '',
-          expiryDate: ''
-        });
-      }, 3000);
+        navigate('/hospital/dashboard');
+      }, 2000);
     } catch (err) {
       setError(err.message || 'Failed to create blood request');
       console.error('Error creating blood request:', err);

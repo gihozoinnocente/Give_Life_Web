@@ -15,6 +15,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminDashboardLayout from './components/admin/DashboardLayout'
 import AdminDashPage from './pages/admin/dashboard'
 import AdminHospitalsPage from './pages/admin/hospitals'
+import AdminSettings from './pages/admin/AdminSettings'
 
 // New Hospital Dashboard with Sidebar
 import DashboardLayout from './components/hospital/DashboardLayout'
@@ -61,7 +62,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboardLayout />}>
           <Route path="dashboard" element={<AdminDashPage />} />
           <Route path="hospitals" element={<AdminHospitalsPage />} />
-          {/* Future: add real pages for users, analytics, settings */}
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
         
         {/* Hospital Dashboard with Sidebar Navigation */}

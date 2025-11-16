@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, User, LogOut, Bell, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { logout } from '../features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { User, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
 function Profile() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
 
   if (!user) {
     navigate('/login');
@@ -29,6 +21,19 @@ function Profile() {
     { date: '04 Nov 2024', bloodUnits: 40 },
     { date: '15 Oct 2024', bloodUnits: 310 },
   ];
+
+  const totalDonations = donationHistory.length;
+  const totalUnitsDonated = donationHistory.reduce((sum, d) => sum + d.bloodUnits, 0);
+  const lastDonation = user.lastDonationDate || donationHistory[0]?.date || 'N/A';
+
+  const roleLabel =
+    user.role === 'donor'
+      ? 'Donor'
+      : user.role === 'hospital'
+      ? 'Hospital'
+      : user.role === 'admin'
+      ? 'Admin'
+      : 'User';
 
   // Calendar logic
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -48,77 +53,8 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
-                Home
-              </Link>
-              <Link to="/about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </Link>
-              <Link to="/find-blood" className="text-gray-900 font-medium border-b-2 border-gray-900 pb-1">
-                Find Blood
-              </Link>
-              <div className="relative">
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link to="/register-donor" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
-                      Register as Donor
-                    </Link>
-                    <Link to="/register-hospital" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-600 hover:text-gray-900 transition relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              
-              <div className="relative">
-                <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
-                >
-                  <User className="w-5 h-5 text-gray-700" />
-                </button>
-                
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Log Out</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </nav>
-      </header>
+      {/* Shared site navbar */}
+      <Navbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -129,13 +65,23 @@ function Profile() {
             <div className="bg-white rounded-2xl shadow-sm p-8">
               <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
                 <div className="flex items-center space-x-6">
-                  <div className="w-28 h-28 bg-gray-100 rounded-2xl flex items-center justify-center">
-                    <User className="w-14 h-14 text-gray-400" />
+                  <div className="w-28 h-28 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white">
+                    <span className="text-4xl font-bold">
+                      {(user.firstName || user.hospitalName || user.email || 'U').charAt(0).toUpperCase()}
+                    </span>
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                      {user.firstName ? `${user.firstName} ${user.lastName}` : user.hospitalName}
-                    </h1>
+                    <div className="flex items-center flex-wrap gap-3">
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        {user.firstName ? `${user.firstName} ${user.lastName}` : user.hospitalName}
+                      </h1>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
+                        {roleLabel}
+                      </span>
+                    </div>
+                    {user.email && (
+                      <p className="mt-1 text-sm text-gray-500">{user.email}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -148,6 +94,22 @@ function Profile() {
                   >
                     Edit Profile
                   </button>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <p className="text-xs font-medium text-red-600 uppercase tracking-wide">Total Donations</p>
+                  <p className="mt-1 text-2xl font-bold text-red-700">{totalDonations}</p>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Blood Units Donated</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{totalUnitsDonated}</p>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Last Donation</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900">{lastDonation}</p>
                 </div>
               </div>
 
@@ -177,22 +139,26 @@ function Profile() {
                     <span className="text-gray-900 text-right font-medium">Pincode</span>
                     <span className="text-gray-900">{user.pinCode || 'N/A'}</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
-                    <span className="text-gray-900 text-right font-medium">Age</span>
-                    <span className="text-gray-900">{user.age || 'N/A'}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
-                    <span className="text-gray-900 text-right font-medium">Blood Group</span>
-                    <span className="text-gray-900">{user.bloodGroup || 'N/A'}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
-                    <span className="text-gray-900 text-right font-medium">Address</span>
-                    <span className="text-gray-900">{user.address || 'N/A'}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-8 py-3 px-6">
-                    <span className="text-gray-900 text-right font-medium">Last Donation Date</span>
-                    <span className="text-gray-900">{user.lastDonationDate || 'N/A'}</span>
-                  </div>
+                  {user.role === 'donor' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
+                        <span className="text-gray-900 text-right font-medium">Age</span>
+                        <span className="text-gray-900">{user.age || 'N/A'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
+                        <span className="text-gray-900 text-right font-medium">Blood Group</span>
+                        <span className="text-gray-900">{user.bloodGroup || 'N/A'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-8 py-3 px-6 border-b border-gray-100">
+                        <span className="text-gray-900 text-right font-medium">Address</span>
+                        <span className="text-gray-900">{user.address || 'N/A'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-8 py-3 px-6">
+                        <span className="text-gray-900 text-right font-medium">Last Donation Date</span>
+                        <span className="text-gray-900">{user.lastDonationDate || 'N/A'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -249,7 +215,7 @@ function Profile() {
                     <div
                       key={day}
                       className={`py-2 rounded ${
-                        isToday ? 'bg-blue-500 text-white font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                        isToday ? 'bg-red-600 text-white font-semibold' : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       {day}

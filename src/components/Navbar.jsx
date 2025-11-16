@@ -51,23 +51,19 @@ function Navbar() {
             </Link>
             {isAuthenticated && user && (
               <>
-                {user.role === 'hospital' && (
-                  <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 transition">
+                {user.role === 'donor' && (
+                  <Link to="/donor/dashboard" className="text-gray-600 hover:text-gray-900 transition">
                     Dashboard
                   </Link>
                 )}
-                <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
-                  Find Blood
-                </Link>
-                {user.role === 'donor' && (
-                  <Link to="/nearby-hospitals" className="text-gray-600 hover:text-gray-900 transition flex items-center space-x-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>Nearby Hospitals</span>
+                {user.role === 'hospital' && (
+                  <Link to="/hospital/dashboard" className="text-gray-600 hover:text-gray-900 transition">
+                    Dashboard
                   </Link>
                 )}
-                {user.role === 'hospital' && (
-                  <Link to="/hospital/request-blood" className="text-red-700 hover:text-red-800 transition font-medium">
-                    Request Blood
+                {user.role === 'admin' && (
+                  <Link to="/admin/dashboard" className="text-gray-600 hover:text-gray-900 transition">
+                    Dashboard
                   </Link>
                 )}
               </>
@@ -120,7 +116,10 @@ function Navbar() {
                 
                 <div className="relative">
                   <button
-                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    onClick={() => {
+                      setProfileDropdownOpen(!profileDropdownOpen);
+                      navigate('/profile');
+                    }}
                     className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
                   >
                     <User className="w-5 h-5 text-gray-700" />

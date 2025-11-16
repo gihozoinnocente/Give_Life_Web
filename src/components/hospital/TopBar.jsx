@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Search, MessageSquare, HelpCircle } from 'lucide-react';
 import { fetchUnreadCount } from '../../features/notifications/notificationSlice';
 import Notifications from '../Notifications';
 
 function TopBar() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { unreadCount } = useSelector((state) => state.notifications);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -61,8 +63,12 @@ function TopBar() {
             )}
           </button>
 
-          {/* User Avatar */}
-          <div className="hidden sm:flex items-center space-x-2 md:space-x-3 pl-2 md:pl-4 border-l border-gray-200">
+          {/* User Avatar (clickable -> Profile) */}
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            className="hidden sm:flex items-center space-x-2 md:space-x-3 pl-2 md:pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg transition focus:outline-none"
+          >
             <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
               {user?.hospitalName?.charAt(0) || 'H'}
             </div>
@@ -72,7 +78,7 @@ function TopBar() {
               </p>
               <p className="text-xs text-gray-500">Hospital Admin</p>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

@@ -38,6 +38,10 @@ function Home() {
     {
       name: 'African Union',
       image: '/images/African Union Picture.jpg'
+    },
+    {
+      name: 'Health Intelligence Center',
+      image: '/images/Health Intelligence Center.jpg'
     }
   ];
 

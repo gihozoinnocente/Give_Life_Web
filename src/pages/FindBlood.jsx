@@ -1,11 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Phone, RefreshCw, AlertTriangle } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import donorService from '../services/donorService';
+import hospitalService from '../services/hospitalService';
 
 function FindBlood() {
   const [activeTab, setActiveTab] = useState('donors');
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [donors, setDonors] = useState([]);
+  const [hospitals, setHospitals] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -24,18 +31,41 @@ function FindBlood() {
     };
   }, [registerDropdownOpen]);
 
-  // Sample donor data
-  const donors = [
-    { name: 'ABC', contact: 'XXXXXXXXXX' },
-    { name: 'DEF', contact: 'XXXXXXXXXX' },
-    { name: 'GHI', contact: 'XXXXXXXXXX' },
-    { name: 'LMN', contact: 'XXXXXXXXXX' },
-    { name: 'XYZ', contact: 'XXXXXXXXXX' }
-  ];
+  // Fetch donors and hospitals on component mount
+  useEffect(() => {
+    fetchDonors();
+    fetchHospitals();
+  }, []);
+
+  const fetchDonors = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await donorService.getAllDonors();
+      setDonors(response.data || []);
+    } catch (err) {
+      setError('Failed to load donors');
+      console.error('Error fetching donors:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchHospitals = async () => {
+    try {
+      const response = await hospitalService.getAllHospitals();
+      setHospitals(response.data || []);
+    } catch (err) {
+      console.error('Error fetching hospitals:', err);
+    }
+  };
 
   const handleRefresh = () => {
-    console.log('Refreshing list...');
-    // Add refresh logic here
+    if (activeTab === 'donors') {
+      fetchDonors();
+    } else {
+      fetchHospitals();
+    }
   };
 
   const handleAutoCall = () => {
@@ -45,63 +75,7 @@ function FindBlood() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
-                Home
-              </Link>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </a>
-              <Link to="/find-blood" className="text-gray-900 font-medium border-b-2 border-gray-900 pb-1">
-                Find Blood
-              </Link>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link 
-                      to="/register-donor" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Donor
-                    </Link>
-                    <Link 
-                      to="/register-hospital" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                Log In
-              </button>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -167,23 +141,49 @@ function FindBlood() {
                 <button
                   onClick={handleRefresh}
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition"
+                  disabled={isLoading}
                 >
-                  <span>Refresh</span>
-                  <RefreshCw className="w-5 h-5" />
+                  <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+                  <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
 
-              <ul className="space-y-4">
-                {donors.map((donor, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="w-2 h-2 bg-black rounded-full mr-4"></span>
-                    <div>
-                      <div className="font-medium text-gray-900">{donor.name}</div>
-                      <div className="text-gray-600">{donor.contact}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                  {error}
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">Loading donors...</div>
+              ) : donors.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No donors found</div>
+              ) : (
+                <ul className="space-y-4">
+                  {donors.map((donor, index) => (
+                    <li key={donor.id || index} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                      <div className="flex items-center">
+                        <span className="w-2 h-2 bg-black rounded-full mr-4"></span>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {donor.firstName} {donor.lastName}
+                          </div>
+                          <div className="text-sm text-gray-600">{donor.phoneNumber}</div>
+                          <div className="text-xs text-gray-500">
+                            {donor.district}, {donor.state}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                          {donor.bloodGroup}
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">Age: {donor.age}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <details className="cursor-pointer">
@@ -203,9 +203,45 @@ function FindBlood() {
 
         {activeTab === 'hospitals' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Hospital listings will be displayed here</p>
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleRefresh}
+                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition"
+                disabled={isLoading}
+              >
+                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+                <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
+
+            {hospitals.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">No hospitals found</div>
+            ) : (
+              <ul className="space-y-4">
+                {hospitals.map((hospital, index) => (
+                  <li key={hospital.id || index} className="p-4 hover:bg-gray-50 rounded-lg transition border border-gray-200">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg">{hospital.hospitalName}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{hospital.address}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Head: {hospital.headOfHospital}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <a 
+                          href={`tel:${hospital.phoneNumber}`}
+                          className="inline-flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span>{hospital.phoneNumber}</span>
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </div>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X } from 'lucide-react';
+import { ChevronDown, Heart, Facebook, Twitter, Instagram, Menu, X, MapPin, Phone, Clock, UserPlus, Droplet } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
 function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [currentSlide, setCurrentSlide] = useState(0);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -27,26 +27,77 @@ function Home() {
   }, [registerDropdownOpen]);
 
   const collaborators = [
-    'RBC',
-    'Ministry of Health in Rwanda',
-    'African Union'
+    {
+      name: 'Rwanda Biomedical Centre',
+      image: '/images/rbc.jpg'
+    },
+    {
+      name: 'Ministry of Health (Rwanda)',
+      image: '/images/Ministry of Health.png'
+    },
+    {
+      name: 'African Union',
+      image: '/images/African Union Picture.jpg'
+    },
+    {
+      name: 'Health Intelligence Center',
+      image: '/images/Health Intelligence Center.jpg'
+    }
   ];
 
   const steps = [
     {
       number: 1,
       title: 'Register Online',
-      description: 'Create your account and complete your donor profile in minutes.'
+      description: 'Create your account and complete your donor profile in minutes.',
+      Icon: UserPlus
     },
     {
       number: 2,
       title: 'Find Location',
-      description: 'Locate the nearest blood donation center or mobile unit.'
+      description: 'Locate the nearest hospital.',
+      Icon: MapPin
     },
     {
       number: 3,
       title: 'Donate Blood',
-      description: 'Visit the center and save lives with your generous donation.'
+      description: 'Visit the hospital and save lives with your generous donation.',
+      Icon: Droplet
+    }
+  ];
+
+  const hospitals = [
+    {
+      name: 'King Faisal Hospital',
+      location: 'Kigali, Gasabo',
+      phone: '+250 788 123 456',
+      hours: '24/7 Emergency',
+      bloodTypes: ['A+', 'B+', 'O+', 'AB+'],
+      // image: '/images/hospital1.jpg'
+    },
+    {
+      name: 'CHUK Hospital',
+      location: 'Kigali, Nyarugenge',
+      phone: '+250 788 234 567',
+      hours: 'Mon-Fri: 8AM-5PM',
+      bloodTypes: ['A-', 'B-', 'O-', 'AB-'],
+      image: '/images/hospital2.jpg'
+    },
+    {
+      name: 'Rwanda Military Hospital',
+      location: 'Kigali, Kicukiro',
+      phone: '+250 788 345 678',
+      hours: '24/7 Emergency',
+      bloodTypes: ['A+', 'O+', 'B+', 'O-'],
+      image: '/images/hospital3.jpg'
+    },
+    {
+      name: 'Kibagabaga Hospital',
+      location: 'Kigali, Gasabo',
+      phone: '+250 788 456 789',
+      hours: 'Mon-Sat: 7AM-6PM',
+      bloodTypes: ['AB+', 'A+', 'B-', 'O+'],
+      image: '/images/hospital4.jpg'
     }
   ];
 
@@ -59,81 +110,9 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-full">hu</div>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#home" className="text-gray-900 font-medium border-b-2 border-red-700 pb-1">
-                Home
-              </a>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 transition">
-                About Us
-              </a>
-              <Link to="/find-blood" className="text-gray-600 hover:text-gray-900 transition">
-                Find Blood
-              </Link>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setRegisterDropdownOpen(!registerDropdownOpen)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                >
-                  Register Now
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </button>
-                {registerDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
-                    <Link 
-                      to="/register-donor" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Donor
-                    </Link>
-                    <Link 
-                      to="/register-hospital" 
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setRegisterDropdownOpen(false)}
-                    >
-                      Register as Hospital
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition">
-                Log In
-              </button>
-            </div>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4 space-y-3">
-              <a href="#home" className="block text-gray-900 font-medium">Home</a>
-              <a href="#about" className="block text-gray-600">About Us</a>
-              <Link to="/find-blood" className="block text-gray-600">Find Blood</Link>
-              <a href="#register" className="block text-gray-600">Register Now</a>
-              <button className="w-full px-6 py-2 border-2 border-gray-900 text-gray-900 rounded">
-                Log In
-              </button>
-            </div>
-          )}
-        </nav>
-      </header>
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
 
       <section className="relative pt-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -159,7 +138,7 @@ function Home() {
                 Your donation can save up to three lives. Join thousands of heroes across Africa who are committed to making a difference. Every drop counts in our mission to ensure no patient waits for life-saving blood.
               </p>
               <button className="bg-black text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition shadow-lg">
-                Get Blood Now
+                Explore Our Web
               </button>
             </div>
           </div>
@@ -179,35 +158,20 @@ function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Our Collaborators</h2>
-          
-          <div className="relative">
-            <div className="overflow-hidden">
-              <div className="flex transition-transform duration-500 ease-in-out">
-                {collaborators.map((collab, index) => (
-                  <div
-                    key={index}
-                    className="min-w-full sm:min-w-[50%] lg:min-w-[33.333%] px-4"
-                  >
-                    <div className="bg-white rounded-xl shadow-md p-12 text-center h-64 flex items-center justify-center">
-                      <h3 className="text-2xl font-bold text-gray-300">{collab}</h3>
-                    </div>
-                  </div>
-                ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {collaborators.map((collab, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col items-center justify-center h-48">
+                <div className="w-32 h-28 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <img
+                    src={collab.image}
+                    alt={collab.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <p className="mt-4 text-sm font-medium text-gray-700 text-center px-2">{collab.name}</p>
               </div>
-            </div>
-            
-            <div className="flex justify-center mt-8 space-x-2">
-              {collaborators.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-2 h-2 rounded-full transition ${
-                    currentSlide === index ? 'bg-gray-900' : 'bg-gray-300'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -230,22 +194,107 @@ function Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 relative z-10">
-              {steps.map((step) => (
-                <div key={step.number} className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 border-gray-900 text-3xl font-bold mb-6 bg-white">
-                    {step.number}
+              {steps.map((step) => {
+                const Icon = step.Icon;
+                return (
+                  <div key={step.number} className="text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 border-gray-900 text-3xl font-bold mb-6 bg-white">
+                      {step.number}
+                    </div>
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full">
+                      <div className="flex flex-col items-center justify-between h-40">
+                        <Icon className="w-9 h-9 text-red-800 mb-2" />
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                          <p className="text-gray-600 text-sm">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <Edit className="w-8 h-8 mx-auto mb-4 text-gray-400" />
-                    <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
-                    <p className="text-gray-600 text-sm">{step.description}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
+
+      {/* Hospitals Section */}
+      {/* <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner Hospitals</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Find a hospital near you and make your life-saving donation today. Our partner hospitals are equipped and ready to receive your generous contribution.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {hospitals.map((hospital, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                <div className="h-48 bg-gradient-to-br from-red-900 to-pink-700 flex items-center justify-center">
+                  <div className="text-white text-center p-6">
+                    <Heart className="w-16 h-16 mx-auto mb-2 fill-white" />
+                    <p className="text-sm font-medium">Blood Donation Center</p>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{hospital.name}</h3>
+                  
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.location}</span>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Phone className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.phone}</span>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Clock className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{hospital.hours}</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">Available Blood Types:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {hospital.bloodTypes.map((type, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-semibold"
+                        >
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/find-blood"
+                    className="block w-full text-center bg-red-700 text-white py-2 rounded-lg font-medium hover:bg-red-800 transition"
+                  >
+                    Visit Hospital
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>*/}
+          
+
+          {/* View All Button */}
+           {/* <div className="text-center mt-12">
+            <Link
+              to="/find-blood"
+              className="inline-block bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
+              View All Hospitals
+            </Link>
+          </div>
+        </div>
+      </section> */}
 
       <footer className="bg-gray-900 text-white">
         <div className="border-b border-gray-800">

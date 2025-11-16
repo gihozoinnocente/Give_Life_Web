@@ -1,89 +1,58 @@
-import React, { useState } from 'react';
-import { Droplet, Calendar, MapPin, Award, TrendingUp, Filter, Download, Eye } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Droplet, Calendar, MapPin, Award, TrendingUp, Download, Eye } from 'lucide-react';
+import donorService from '../../services/donorService';
 
 function MyDonations() {
-  const [filterStatus, setFilterStatus] = useState('all');
+  const { user } = useSelector((state) => state.auth);
+  const [donations, setDonations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const donations = [
-    {
-      id: 1,
-      date: '2025-09-15',
-      hospital: 'King Faisal Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    },
-    {
-      id: 2,
-      date: '2025-06-20',
-      hospital: 'Kigali Central Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    },
-    {
-      id: 3,
-      date: '2025-03-10',
-      hospital: 'King Faisal Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    },
-    {
-      id: 4,
-      date: '2024-12-05',
-      hospital: 'Rwanda Military Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    },
-    {
-      id: 5,
-      date: '2024-09-18',
-      hospital: 'University Teaching Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    },
-    {
-      id: 6,
-      date: '2024-06-22',
-      hospital: 'Kibagabaga Hospital',
-      location: 'Kigali, Rwanda',
-      bloodType: 'O+',
-      units: 1,
-      status: 'completed',
-      certificate: true,
-      impact: 3
-    }
-  ];
+  useEffect(() => {
+    const fetchDonations = async () => {
+      if (!user?.id) return;
+      try {
+        setLoading(true);
+        setError('');
+        // Use backend endpoint /api/donations/donor/:donorId
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_URL}/api/donations/donor/${user.id}`);
+        const data = await res.json();
+        if (data.status === 'success') {
+          const rows = Array.isArray(data.data) ? data.data : [];
+          const mapped = rows.map((r) => ({
+            id: r.id,
+            date: r.date || r.created_at,
+            hospital: r.hospital_name || 'Hospital',
+            location: r.hospital_address || '',
+            bloodType: r.blood_type,
+            units: r.units,
+            status: r.status,
+            certificate: !!r.certificate,
+            impact: (Number(r.units) || 0) * 3,
+          }));
+          setDonations(mapped);
+        } else {
+          throw new Error(data.message || 'Failed to load donations');
+        }
+      } catch (e) {
+        setError(e.message || 'Failed to load donations');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDonations();
+  }, [user?.id]);
 
   const stats = {
     totalDonations: donations.length,
-    totalUnits: donations.reduce((sum, d) => sum + d.units, 0),
-    livesImpacted: donations.reduce((sum, d) => sum + d.impact, 0),
+    totalUnits: donations.reduce((sum, d) => sum + (Number(d.units) || 0), 0),
+    livesImpacted: donations.reduce((sum, d) => sum + ((Number(d.units) || 0) * 3), 0),
     lastDonation: donations[0]?.date
   };
 
-  const filteredDonations = donations.filter(donation => {
-    if (filterStatus !== 'all' && donation.status !== filterStatus) return false;
-    return true;
-  });
+  const filteredDonations = donations;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -100,6 +69,12 @@ function MyDonations() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{error}</div>
+      )}
+      {loading && (
+        <div className="text-sm text-gray-600">Loading donations...</div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

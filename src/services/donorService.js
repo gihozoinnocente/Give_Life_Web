@@ -13,6 +13,28 @@ const donorService = {
     }
   },
 
+  // Get hospital health records for the logged-in donor
+  getHospitalHealthRecords: async () => {
+    try {
+      const response = await api.get('/donors/me/hospital-health-records');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Export hospital health records for the logged-in donor
+  exportHospitalHealthRecords: async (format = 'pdf') => {
+    try {
+      const response = await api.get(`/donors/me/hospital-health-records/export?format=${format}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Update donor profile
   updateDonorProfile: async (profileData) => {
     try {

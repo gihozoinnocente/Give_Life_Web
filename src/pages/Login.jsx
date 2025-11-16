@@ -35,7 +35,9 @@ function Login() {
 
     if (isSuccess || user) {
       // Redirect users based on their role
-      if (user && user.role === 'hospital') {
+      if (user && user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (user && user.role === 'hospital') {
         navigate('/hospital/dashboard');
       } else if (user && user.role === 'donor') {
         navigate('/donor/dashboard');
@@ -50,15 +52,13 @@ function Login() {
   const validate = (values) => {
     const nextErrors = { email: '', password: '' };
     if (!values.email) {
-      nextErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-      nextErrors.email = 'Enter a valid email address';
+      nextErrors.email = 'Email or username is required';
     }
 
     if (!values.password) {
       nextErrors.password = 'Password is required';
-    } else if (values.password.length < 6) {
-      nextErrors.password = 'Password must be at least 6 characters';
+    } else if (values.password.length < 4) {
+      nextErrors.password = 'Password must be at least 4 characters';
     }
     return nextErrors;
   };
@@ -145,23 +145,23 @@ function Login() {
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 {/* Toasts handle error display */}
 
-                {/* Email Field */}
+                {/* Email/Username Field */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
+                    Email or Username
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
-                      type="email"
+                      type="text"
                       id="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      placeholder="Enter your email"
+                      placeholder="Enter your email or username"
                       autoComplete="email"
                       aria-invalid={Boolean(touched.email && errors.email)}
                       aria-describedby={touched.email && errors.email ? 'email-error' : undefined}

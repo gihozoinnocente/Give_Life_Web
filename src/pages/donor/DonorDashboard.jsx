@@ -1,84 +1,110 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Droplet, Calendar, Award, TrendingUp, Heart, MapPin, Bell, Clock } from 'lucide-react';
+import notificationService from '../../services/notificationService';
+import { getAuthHeaders } from '../../config/api';
 
 function DonorDashboard() {
-  const stats = {
-    totalDonations: 12,
-    livesImpacted: 36,
-    nextEligible: '15 days',
-    points: 1200
-  };
+  const { user } = useSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState({ totalDonations: 0, livesImpacted: 0, nextEligible: 'Now', points: 0 });
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [recentDonations, setRecentDonations] = useState([]);
+  const [urgentRequests, setUrgentRequests] = useState([]);
 
-  const upcomingAppointments = [
-    {
-      id: 1,
-      hospital: 'King Faisal Hospital',
-      date: '2025-10-25',
-      time: '10:00 AM',
-      type: 'Regular Donation',
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      hospital: 'Rwanda Military Hospital',
-      date: '2025-11-05',
-      time: '02:00 PM',
-      type: 'Follow-up',
-      status: 'pending'
-    }
-  ];
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return;
+      try {
+        setLoading(true);
+        setError('');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-  const recentDonations = [
-    {
-      id: 1,
-      date: '2025-09-15',
-      hospital: 'King Faisal Hospital',
-      units: 1,
-      bloodType: 'O+',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      date: '2025-06-20',
-      hospital: 'Kigali Central Hospital',
-      units: 1,
-      bloodType: 'O+',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      date: '2025-03-10',
-      hospital: 'King Faisal Hospital',
-      units: 1,
-      bloodType: 'O+',
-      status: 'completed'
-    }
-  ];
+        // Donations for stats and recent (with auth headers)
+        const donRes = await fetch(`${API_URL}/api/donations/donor/${user.id}`, {
+          headers: getAuthHeaders(),
+        });
+        const donJson = await donRes.json();
+        if (donJson.status === 'success') {
+          const rows = Array.isArray(donJson.data) ? donJson.data : [];
+          const mapped = rows.map((r) => ({
+            id: r.id,
+            date: r.date || r.created_at,
+            hospital: r.hospital_name || 'Hospital',
+            units: r.units,
+            bloodType: r.blood_type,
+            status: r.status,
+          }));
+          setRecentDonations(mapped.slice(0, 3));
+          const totalUnits = mapped.reduce((s, d) => s + (Number(d.units) || 0), 0);
+          const lives = totalUnits * 3;
+          // Next eligible: 56 days after last completed donation
+          let nextEligible = 'Now';
+          if (mapped.length > 0) {
+            const last = new Date(mapped[0].date);
+            const next = new Date(last);
+            next.setDate(next.getDate() + 56);
+            const diffDays = Math.ceil((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            nextEligible = diffDays > 0 ? `${diffDays} days` : 'Now';
+          }
+          setStats({ totalDonations: mapped.length, livesImpacted: lives, nextEligible, points: mapped.length * 100 });
+        }
 
-  const urgentRequests = [
-    {
-      id: 1,
-      hospital: 'University Teaching Hospital',
-      bloodType: 'O+',
-      units: 3,
-      urgency: 'critical',
-      distance: '2.3 km',
-      postedTime: '30 minutes ago'
-    },
-    {
-      id: 2,
-      hospital: 'Kibagabaga Hospital',
-      bloodType: 'O+',
-      units: 2,
-      urgency: 'high',
-      distance: '5.7 km',
-      postedTime: '2 hours ago'
-    }
-  ];
+        // Appointments (donor) with auth headers
+        const apptRes = await fetch(`${API_URL}/api/appointments/donor/${user.id}`, {
+          headers: getAuthHeaders(),
+        });
+        const apptJson = await apptRes.json();
+        if (apptJson.status === 'success') {
+          const appts = Array.isArray(apptJson.data) ? apptJson.data : [];
+          const upcoming = appts
+            .filter((a) => a.status === 'confirmed' || a.status === 'pending')
+            .map((a) => ({
+              id: a.id,
+              hospital: a.hospital || 'Hospital',
+              date: a.date,
+              time: a.time,
+              type: a.type,
+              status: a.status,
+            }))
+            .slice(0, 2);
+          setUpcomingAppointments(upcoming);
+        }
+
+        // Urgent requests from notifications
+        const notifs = await notificationService.getUserNotifications(user.id);
+        const urgent = (notifs || [])
+          .filter((n) => ['critical', 'urgent'].includes(String(n.data?.urgency || '').toLowerCase()))
+          .slice(0, 4)
+          .map((n) => ({
+            id: n.id,
+            hospital: n.data?.hospitalName || 'Hospital',
+            bloodType: n.data?.bloodType || '—',
+            units: n.data?.unitsNeeded || 0,
+            urgency: n.data?.urgency || 'urgent',
+            distance: '—',
+            postedTime: new Date(n.createdAt).toLocaleString(),
+          }));
+        setUrgentRequests(urgent);
+      } catch (e) {
+        setError(e?.message || 'Failed to load dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{error}</div>
+      )}
+      {loading && (
+        <div className="text-sm text-gray-600">Loading dashboard...</div>
+      )}
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-lg p-8 text-white">
         <div className="flex items-center justify-between">

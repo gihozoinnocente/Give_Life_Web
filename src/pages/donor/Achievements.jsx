@@ -1,20 +1,133 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Award, Trophy, Star, Medal, Crown, TrendingUp, Gift, Calendar, Droplet, Users, Zap, Target, Lock, CheckCircle } from 'lucide-react';
+import badgeService from '../../services/badgeService';
+import { useToast } from '../../components/ToastProvider.jsx';
 
 function Achievements() {
+  const { user } = useSelector((state) => state.auth);
+  const toast = useToast();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [earned, setEarned] = useState([]);
+  const [inProgress, setInProgress] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // User stats
-  const userStats = {
-    totalDonations: 12,
-    totalPoints: 1200,
-    currentLevel: 3,
-    nextLevelPoints: 1500,
-    rank: 'Gold Donor',
-    livesImpacted: 36,
-    streak: 6,
-    badges: 8
+  const displayName = user?.name || user?.email || 'Donor';
+
+  // Build a shareable SVG certificate string for a badge
+  const buildBadgeSVG = (badge) => {
+    const title = badge.title || 'Badge';
+    const dateStr = new Date(badge.unlockedDate || badge.earnedAt || new Date()).toLocaleDateString();
+    const width = 1000; // px
+    const height = 600; // px
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#00000055"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="80" y="80" rx="24" ry="24" width="${width-160}" height="${height-160}" fill="#ffffff" opacity="0.95"/>
+  </g>
+  <g>
+    <text x="50%" y="200" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800" fill="#111827">${title}</text>
+    <text x="50%" y="260" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" fill="#6b7280">Awarded to</text>
+    <text x="50%" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="700" fill="#111827">${displayName}</text>
+    <text x="50%" y="380" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="#6b7280">on ${dateStr}</text>
+    <g transform="translate(${width/2 - 60}, 410)">
+      <circle cx="60" cy="60" r="60" fill="#dc2626"/>
+      <path d="M60 20 L80 55 L40 55 Z" fill="#ffffff"/>
+    </g>
+    <text x="50%" y="520" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" fill="#9ca3af">Give Life Blood Donation</text>
+  </g>
+</svg>`;
   };
+
+  // Convert SVG string to PNG and trigger download
+  const downloadBadge = async (badge, format = 'png') => {
+    try {
+      const svgString = buildBadgeSVG(badge);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      if (format === 'svg') {
+        const a = document.createElement('a');
+        a.href = svgUrl;
+        a.download = `${(badge.title || 'badge').toLowerCase().replace(/\s+/g, '-')}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(svgUrl);
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const canvas = document.createElement('canvas');
+      const width = 1000; const height = 600;
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, width, height);
+          URL.revokeObjectURL(svgUrl);
+          resolve();
+        };
+        img.onerror = reject;
+        img.src = svgUrl;
+      });
+
+      const pngUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = `${(badge.title || 'badge').toLowerCase().replace(/\s+/g, '-')}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error('Badge download failed:', e);
+      try {
+        toast.error('Failed to download badge.');
+      } catch (_) {}
+    }
+  };
+
+  const userStats = {
+    totalDonations: 0,
+    totalPoints: 0,
+    currentLevel: 1,
+    nextLevelPoints: 500,
+    rank: 'Donor',
+    livesImpacted: 0,
+    streak: 0,
+    badges: earned.length
+  };
+
+  useEffect(() => {
+    const fetchBadges = async () => {
+      if (!user?.id) return;
+      try {
+        setLoading(true);
+        setError('');
+        const data = await badgeService.getDonorBadges(user.id);
+        setEarned(Array.isArray(data.earned) ? data.earned : []);
+        setInProgress(Array.isArray(data.inProgress) ? data.inProgress : []);
+      } catch (e) {
+        setError(e?.message || 'Failed to load achievements');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBadges();
+  }, [user?.id]);
 
   // Achievement categories
   const categories = [
@@ -25,124 +138,29 @@ function Achievements() {
     { id: 'special', name: 'Special', icon: Star }
   ];
 
-  // Achievements data
+  // Combine earned and in-progress into a unified array for the grid based on selectedCategory filters
   const achievements = [
-    {
-      id: 1,
-      title: 'First Drop',
-      description: 'Complete your first blood donation',
-      category: 'donations',
-      icon: Droplet,
-      points: 100,
-      unlocked: true,
-      unlockedDate: '2024-01-15',
-      progress: 100,
-      color: 'red'
-    },
-    {
-      id: 2,
-      title: 'Regular Hero',
-      description: 'Donate blood 5 times',
+    ...earned.map((b, idx) => ({
+      id: `e-${idx}`,
+      title: b.title,
+      description: b.description,
       category: 'donations',
       icon: Award,
-      points: 250,
       unlocked: true,
-      unlockedDate: '2024-06-20',
-      progress: 100,
-      color: 'blue'
-    },
-    {
-      id: 3,
-      title: 'Life Saver',
-      description: 'Donate blood 10 times',
-      category: 'donations',
-      icon: Trophy,
-      points: 500,
-      unlocked: true,
-      unlockedDate: '2025-03-10',
-      progress: 100,
-      color: 'yellow'
-    },
-    {
-      id: 4,
-      title: 'Super Donor',
-      description: 'Donate blood 25 times',
-      category: 'donations',
-      icon: Crown,
-      points: 1000,
-      unlocked: false,
-      progress: 48,
-      color: 'purple'
-    },
-    {
-      id: 5,
-      title: 'Century Club',
-      description: 'Donate blood 100 times',
-      category: 'milestones',
-      icon: Medal,
-      points: 5000,
-      unlocked: false,
-      progress: 12,
-      color: 'gold'
-    },
-    {
-      id: 6,
-      title: 'Early Bird',
-      description: 'Donate before 9 AM',
-      category: 'special',
-      icon: Calendar,
-      points: 50,
-      unlocked: true,
-      unlockedDate: '2024-08-05',
-      progress: 100,
-      color: 'green'
-    },
-    {
-      id: 7,
-      title: 'Streak Master',
-      description: 'Maintain a 6-month donation streak',
-      category: 'milestones',
-      icon: Zap,
-      points: 300,
-      unlocked: true,
-      unlockedDate: '2025-09-15',
-      progress: 100,
-      color: 'orange'
-    },
-    {
-      id: 8,
-      title: 'Community Champion',
-      description: 'Refer 5 new donors',
-      category: 'community',
-      icon: Users,
-      points: 400,
-      unlocked: false,
-      progress: 60,
-      color: 'pink'
-    },
-    {
-      id: 9,
-      title: 'Ambassador',
-      description: 'Refer 10 new donors',
-      category: 'community',
-      icon: Star,
-      points: 800,
-      unlocked: false,
-      progress: 30,
-      color: 'indigo'
-    },
-    {
-      id: 10,
-      title: 'Holiday Hero',
-      description: 'Donate during a holiday season',
-      category: 'special',
-      icon: Gift,
-      points: 150,
-      unlocked: true,
-      unlockedDate: '2024-12-25',
+      unlockedDate: b.earnedAt || new Date().toISOString(),
       progress: 100,
       color: 'red'
-    }
+    })),
+    ...inProgress.map((p, idx) => ({
+      id: `p-${idx}`,
+      title: p.title,
+      description: p.description,
+      category: 'donations',
+      icon: Target,
+      unlocked: false,
+      progress: p.percent,
+      color: 'blue'
+    }))
   ];
 
   // Levels
@@ -159,9 +177,11 @@ function Achievements() {
   );
 
   const unlockedAchievements = achievements.filter(a => a.unlocked);
-  const totalPoints = unlockedAchievements.reduce((sum, a) => sum + a.points, 0);
-  const progressToNextLevel = ((userStats.totalPoints - levels[userStats.currentLevel - 1].minPoints) / 
-    (levels[userStats.currentLevel]?.minPoints - levels[userStats.currentLevel - 1].minPoints)) * 100;
+  const totalPoints = unlockedAchievements.length * 100; // placeholder points per badge
+  const progressToNextLevel = levels[userStats.currentLevel]
+    ? ((userStats.totalPoints - levels[userStats.currentLevel - 1].minPoints) / 
+      (levels[userStats.currentLevel].minPoints - levels[userStats.currentLevel - 1].minPoints)) * 100
+    : 100;
 
   const getColorClasses = (color) => {
     const colors = {
@@ -180,6 +200,18 @@ function Achievements() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-4 rounded-xl bg-white border-l-4 border-red-400 shadow-sm text-sm flex items-start space-x-3">
+          <Calendar className="w-4 h-4 text-red-500 mt-0.5" />
+          <div>
+            <p className="text-gray-900 font-medium">We couldn't load your achievements.</p>
+            <p className="text-gray-600 mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+      {loading && (
+        <div className="text-sm text-gray-600">Loading achievements...</div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -354,7 +386,22 @@ function Achievements() {
                         <CheckCircle className="w-4 h-4" />
                         <span>Unlocked</span>
                       </span>
-                      <span className="text-sm font-bold text-gray-900">+{achievement.points} pts</span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => downloadBadge(achievement, 'png')}
+                          className="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700 transition"
+                        >
+                          Download PNG
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => downloadBadge(achievement, 'svg')}
+                          className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-md text-xs font-semibold hover:bg-gray-200 transition"
+                        >
+                          SVG
+                        </button>
+                      </div>
                     </div>
                     <p className="text-xs text-gray-500">
                       Earned on {new Date(achievement.unlockedDate).toLocaleDateString('en-US', { 

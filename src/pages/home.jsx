@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Heart, Edit, Facebook, Twitter, Instagram, Menu, X, MapPin, Phone, Clock } from 'lucide-react';
+import { ChevronDown, Heart, Facebook, Twitter, Instagram, Menu, X, MapPin, Phone, Clock, UserPlus, Droplet } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [registerDropdownOpen, setRegisterDropdownOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [currentSlide, setCurrentSlide] = useState(0);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -28,26 +27,38 @@ function Home() {
   }, [registerDropdownOpen]);
 
   const collaborators = [
-    'RBC',
-    'Ministry of Health in Rwanda',
-    'African Union'
+    {
+      name: 'Rwanda Biomedical Centre',
+      image: '/images/rbc.jpg'
+    },
+    {
+      name: 'Ministry of Health (Rwanda)',
+      image: '/images/Ministry of Health.png'
+    },
+    {
+      name: 'African Union',
+      image: '/images/African Union Picture.jpg'
+    }
   ];
 
   const steps = [
     {
       number: 1,
       title: 'Register Online',
-      description: 'Create your account and complete your donor profile in minutes.'
+      description: 'Create your account and complete your donor profile in minutes.',
+      Icon: UserPlus
     },
     {
       number: 2,
       title: 'Find Location',
-      description: 'Locate the nearest hospital.'
+      description: 'Locate the nearest hospital.',
+      Icon: MapPin
     },
     {
       number: 3,
       title: 'Donate Blood',
-      description: 'Visit the hospital and save lives with your generous donation.'
+      description: 'Visit the hospital and save lives with your generous donation.',
+      Icon: Droplet
     }
   ];
 
@@ -58,7 +69,7 @@ function Home() {
       phone: '+250 788 123 456',
       hours: '24/7 Emergency',
       bloodTypes: ['A+', 'B+', 'O+', 'AB+'],
-      image: '/images/hospital1.jpg'
+      // image: '/images/hospital1.jpg'
     },
     {
       name: 'CHUK Hospital',
@@ -143,35 +154,20 @@ function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Our Collaborators</h2>
-          
-          <div className="relative">
-            <div className="overflow-hidden">
-              <div className="flex transition-transform duration-500 ease-in-out">
-                {collaborators.map((collab, index) => (
-                  <div
-                    key={index}
-                    className="min-w-full sm:min-w-[50%] lg:min-w-[33.333%] px-4"
-                  >
-                    <div className="bg-white rounded-xl shadow-md p-12 text-center h-64 flex items-center justify-center">
-                      <h3 className="text-2xl font-bold text-gray-300">{collab}</h3>
-                    </div>
-                  </div>
-                ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {collaborators.map((collab, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col items-center justify-center h-48">
+                <div className="w-32 h-28 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <img
+                    src={collab.image}
+                    alt={collab.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <p className="mt-4 text-sm font-medium text-gray-700 text-center px-2">{collab.name}</p>
               </div>
-            </div>
-            
-            <div className="flex justify-center mt-8 space-x-2">
-              {collaborators.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-2 h-2 rounded-full transition ${
-                    currentSlide === index ? 'bg-gray-900' : 'bg-gray-300'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -194,25 +190,32 @@ function Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 relative z-10">
-              {steps.map((step) => (
-                <div key={step.number} className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 border-gray-900 text-3xl font-bold mb-6 bg-white">
-                    {step.number}
+              {steps.map((step) => {
+                const Icon = step.Icon;
+                return (
+                  <div key={step.number} className="text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 border-gray-900 text-3xl font-bold mb-6 bg-white">
+                      {step.number}
+                    </div>
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full">
+                      <div className="flex flex-col items-center justify-between h-40">
+                        <Icon className="w-9 h-9 text-red-800 mb-2" />
+                        <div>
+                          <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                          <p className="text-gray-600 text-sm">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <Edit className="w-8 h-8 mx-auto mb-4 text-gray-400" />
-                    <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
-                    <p className="text-gray-600 text-sm">{step.description}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
       {/* Hospitals Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      {/* <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner Hospitals</h2>
@@ -224,7 +227,6 @@ function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {hospitals.map((hospital, index) => (
               <div key={index} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                {/* Hospital Image */}
                 <div className="h-48 bg-gradient-to-br from-red-900 to-pink-700 flex items-center justify-center">
                   <div className="text-white text-center p-6">
                     <Heart className="w-16 h-16 mx-auto mb-2 fill-white" />
@@ -232,7 +234,6 @@ function Home() {
                   </div>
                 </div>
 
-                {/* Hospital Info */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{hospital.name}</h3>
                   
@@ -253,7 +254,6 @@ function Home() {
                     </div>
                   </div>
 
-                  {/* Blood Types */}
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 mb-2">Available Blood Types:</p>
                     <div className="flex flex-wrap gap-2">
@@ -268,7 +268,6 @@ function Home() {
                     </div>
                   </div>
 
-                  {/* Action Button */}
                   <Link
                     to="/find-blood"
                     className="block w-full text-center bg-red-700 text-white py-2 rounded-lg font-medium hover:bg-red-800 transition"
@@ -278,10 +277,11 @@ function Home() {
                 </div>
               </div>
             ))}
-          </div>
+          </div>*/}
+          
 
           {/* View All Button */}
-          <div className="text-center mt-12">
+           {/* <div className="text-center mt-12">
             <Link
               to="/find-blood"
               className="inline-block bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
@@ -290,7 +290,7 @@ function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       <footer className="bg-gray-900 text-white">
         <div className="border-b border-gray-800">

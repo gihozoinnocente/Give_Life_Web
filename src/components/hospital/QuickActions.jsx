@@ -2,42 +2,35 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Users, FileText, Settings, Calendar, MapPin } from 'lucide-react';
 
-const QuickActions = () => {
+const QuickActions = ({ asNavbar = false }) => {
   const actions = [
     {
       title: 'Request Blood',
       description: 'Create new blood request',
       icon: Bell,
       color: 'red',
-      link: '/hospital/request-blood',
+      link: '/hospital/requests',
     },
     {
       title: 'Find Donors',
       description: 'Search available donors',
       icon: Users,
       color: 'blue',
-      link: '/find-blood',
+      link: '/hospital/donors',
     },
     {
       title: 'View Reports',
       description: 'Access analytics & reports',
       icon: FileText,
       color: 'green',
-      link: '#',
+      link: '/hospital/reports',
     },
     {
       title: 'Schedule Drive',
       description: 'Organize donation event',
       icon: Calendar,
       color: 'purple',
-      link: '#',
-    },
-    {
-      title: 'Nearby Donors',
-      description: 'View donors on map',
-      icon: MapPin,
-      color: 'orange',
-      link: '/nearby-hospitals',
+      link: '/hospital/appointments',
     },
     {
       title: 'Settings',
@@ -56,6 +49,26 @@ const QuickActions = () => {
     orange: 'bg-orange-50 text-orange-600 hover:bg-orange-100',
     gray: 'bg-gray-50 text-gray-600 hover:bg-gray-100',
   };
+
+  if (asNavbar) {
+    return (
+      <nav className="w-full bg-white/90 backdrop-blur border border-gray-200 rounded-xl shadow-sm">
+        <ul className="flex items-stretch overflow-x-auto no-scrollbar divide-x divide-gray-200">
+          {actions.map((action, index) => (
+            <li key={index} className="min-w-[140px]">
+              <Link
+                to={action.link}
+                className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 transition"
+              >
+                <action.icon className="w-5 h-5" />
+                <span className="text-sm font-medium whitespace-nowrap">{action.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

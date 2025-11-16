@@ -64,6 +64,12 @@ function Sidebar({ isOpen, setIsOpen }) {
       badge: '5'
     },
     {
+      title: 'Health Records',
+      icon: FileText,
+      path: '/hospital/health-records',
+      badge: null
+    },
+    {
       title: 'Reports',
       icon: FileText,
       path: '/hospital/reports',

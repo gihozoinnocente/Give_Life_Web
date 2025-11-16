@@ -1,17 +1,58 @@
-import React, { useState } from 'react';
-import { Droplet, Plus, Minus, AlertCircle, TrendingUp, Download } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Droplet, Plus, Minus, AlertCircle, TrendingUp, Download, RefreshCw } from 'lucide-react';
+import * as inventoryService from '../../services/inventoryService';
 
 function BloodInventory() {
-  const [inventory, setInventory] = useState([
-    { bloodType: 'A+', units: 45, criticalLevel: 20, status: 'good', trend: 'up', percentage: 5 },
-    { bloodType: 'A-', units: 12, criticalLevel: 15, status: 'low', trend: 'down', percentage: 8 },
-    { bloodType: 'B+', units: 38, criticalLevel: 20, status: 'good', trend: 'up', percentage: 3 },
-    { bloodType: 'B-', units: 8, criticalLevel: 15, status: 'critical', trend: 'down', percentage: 12 },
-    { bloodType: 'AB+', units: 22, criticalLevel: 15, status: 'good', trend: 'stable', percentage: 0 },
-    { bloodType: 'AB-', units: 6, criticalLevel: 10, status: 'low', trend: 'down', percentage: 5 },
-    { bloodType: 'O+', units: 52, criticalLevel: 25, status: 'good', trend: 'up', percentage: 7 },
-    { bloodType: 'O-', units: 14, criticalLevel: 20, status: 'low', trend: 'down', percentage: 10 }
-  ]);
+  const { user } = useSelector((state) => state.auth);
+  const hospitalId = user?.id;
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const calculateStatus = (units, criticalLevel) => {
+    if (units < criticalLevel) return 'critical';
+    if (units < criticalLevel * 1.5) return 'low';
+    return 'good';
+  };
+
+  const fetchInventory = async () => {
+    if (!hospitalId) return;
+    try {
+      setLoading(true);
+      setError('');
+      const data = await inventoryService.getHospitalInventory(hospitalId);
+      const mapped = (data || []).map((row) => ({
+        bloodType: row.blood_type,
+        units: row.units_available,
+        criticalLevel: row.critical_level ?? 15,
+        status: calculateStatus(row.units_available, row.critical_level ?? 15),
+        trend: 'stable',
+        percentage: 0,
+      }));
+      // Ensure all blood types exist even if zero
+      const BLOOD_TYPES = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+      const byType = Object.fromEntries(mapped.map(m => [m.bloodType, m]));
+      const completed = BLOOD_TYPES.map(bt => byType[bt] || ({
+        bloodType: bt,
+        units: 0,
+        criticalLevel: 15,
+        status: calculateStatus(0, 15),
+        trend: 'stable',
+        percentage: 0,
+      }));
+      setInventory(completed);
+    } catch (e) {
+      setError(e.message || 'Failed to load inventory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInventory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hospitalId]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -44,11 +85,24 @@ function BloodInventory() {
           <h1 className="text-3xl font-bold text-gray-900">Blood Inventory</h1>
           <p className="text-gray-600 mt-1">Manage and monitor blood stock levels</p>
         </div>
-        <button className="flex items-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition shadow-lg">
-          <Download className="w-5 h-5" />
-          <span>Export Report</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button onClick={fetchInventory} disabled={loading} className="flex items-center space-x-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition shadow-sm disabled:opacity-50">
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+          <button className="flex items-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition shadow-lg">
+            <Download className="w-5 h-5" />
+            <span>Export Report</span>
+          </button>
+        </div>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{error}</div>
+      )}
+      {loading && (
+        <div className="text-sm text-gray-600">Loading inventory...</div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -154,61 +208,8 @@ function BloodInventory() {
               {item.status.toUpperCase()}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-2 mt-4">
-              <button className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-700 px-3 py-2 rounded-lg hover:bg-green-100 transition text-sm font-medium">
-                <Plus className="w-4 h-4" />
-                <span>Add</span>
-              </button>
-              <button className="flex-1 flex items-center justify-center space-x-1 bg-red-50 text-red-700 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm font-medium">
-                <Minus className="w-4 h-4" />
-                <span>Use</span>
-              </button>
-            </div>
           </div>
         ))}
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Transactions</h2>
-        <div className="space-y-3">
-          {[
-            { type: 'addition', bloodType: 'O+', units: 5, time: '2 hours ago', donor: 'John Doe' },
-            { type: 'usage', bloodType: 'A+', units: 3, time: '4 hours ago', patient: 'Emergency Case #1234' },
-            { type: 'addition', bloodType: 'B-', units: 2, time: '6 hours ago', donor: 'Jane Smith' },
-            { type: 'usage', bloodType: 'O-', units: 4, time: '8 hours ago', patient: 'Surgery Case #5678' }
-          ].map((transaction, index) => (
-            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  transaction.type === 'addition' ? 'bg-green-100' : 'bg-red-100'
-                }`}>
-                  {transaction.type === 'addition' ? (
-                    <Plus className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <Minus className="w-5 h-5 text-red-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {transaction.type === 'addition' ? 'Added' : 'Used'} {transaction.units} units of {transaction.bloodType}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {transaction.donor || transaction.patient} • {transaction.time}
-                  </p>
-                </div>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                transaction.type === 'addition' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
-              }`}>
-                {transaction.type === 'addition' ? '+' : '-'}{transaction.units}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

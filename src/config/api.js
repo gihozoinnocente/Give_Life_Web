@@ -63,6 +63,10 @@ export const API_ENDPOINTS = {
   GET_HOSPITAL_BY_ID: (id) => `/hospitals/${id}`,
   SEARCH_HOSPITALS: '/hospitals/search',
   
+  // Admin endpoints
+  ADMIN_LIST_HOSPITALS: '/admin/hospitals',
+  ADMIN_CREATE_HOSPITAL: '/admin/hospitals',
+  
   // Notification endpoints
   CREATE_BLOOD_REQUEST: '/notifications/blood-request',
   GET_USER_NOTIFICATIONS: (userId) => `/notifications/user/${userId}`,

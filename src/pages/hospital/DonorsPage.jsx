@@ -40,7 +40,16 @@ function DonorsPage() {
   const fetchDonors = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/donors`);
+      const userStr = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      const hospitalId = currentUser?.id;
+
+      const response = await fetch(`${API_URL}/api/hospitals/${hospitalId}/donors`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
       
       if (data.status === 'success') {

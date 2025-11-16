@@ -11,6 +11,16 @@ const hospitalService = {
     }
   },
 
+  // Get donors who opted-in for this hospital
+  getHospitalDonors: async (hospitalId) => {
+    try {
+      const response = await api.get(`/hospitals/${hospitalId}/donors`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Search hospitals
   searchHospitals: async (searchTerm) => {
     try {
@@ -126,6 +136,42 @@ const hospitalService = {
     } catch (error) {
       throw error.response?.data || error.message;
     }
+  },
+
+  // Get hospital health records
+  getHealthRecords: async (hospitalId, params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.donorId) queryParams.append('donorId', params.donorId);
+      const query = queryParams.toString();
+      const response = await api.get(`/hospitals/${hospitalId}/health-records${query ? `?${query}` : ''}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Add hospital health record
+  addHealthRecord: async (hospitalId, recordData) => {
+    try {
+      const response = await api.post(`/hospitals/${hospitalId}/health-records`, recordData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  }
+};
+
+export const getRecognitionStats = async (hospitalId) => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  try {
+    const res = await fetch(`${API_URL}/api/hospitals/${hospitalId}/recognition`);
+    const data = await res.json();
+    if (data.status === 'success') return data.data;
+    throw new Error(data.message || 'Failed to fetch recognition stats');
+  } catch (e) {
+    console.error('Error fetching recognition stats:', e);
+    throw e;
   }
 };
 

@@ -11,6 +11,10 @@ import Dashboard from './pages/Dashboard'
 import HospitalDashboard from './pages/HospitalDashboard'
 import HospitalBloodRequest from './pages/HospitalBloodRequest'
 import NearbyHospitals from './pages/NearbyHospitals'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminDashboardLayout from './components/admin/DashboardLayout'
+import AdminDashPage from './pages/admin/dashboard'
+import AdminHospitalsPage from './pages/admin/hospitals'
 
 // New Hospital Dashboard with Sidebar
 import DashboardLayout from './components/hospital/DashboardLayout'
@@ -24,6 +28,8 @@ import DonorRecognition from './pages/hospital/DonorRecognition'
 import AppointmentsPage from './pages/hospital/AppointmentsPage'
 import ReportsPage from './pages/hospital/ReportsPage'
 import NearbyHospitalsPage from './pages/hospital/NearbyHospitalsPage'
+import HospitalHealthRecords from './pages/hospital/HealthRecords'
+import HospitalSettings from './pages/hospital/HospitalSettings'
 
 // Donor Dashboard with Sidebar
 import DonorDashboardLayout from './components/donor/DashboardLayout'
@@ -51,6 +57,12 @@ function App() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/nearby-hospitals" element={<NearbyHospitals />} />
+        {/* Admin Dashboard with Sidebar Navigation */}
+        <Route path="/admin" element={<AdminDashboardLayout />}>
+          <Route path="dashboard" element={<AdminDashPage />} />
+          <Route path="hospitals" element={<AdminHospitalsPage />} />
+          {/* Future: add real pages for users, analytics, settings */}
+        </Route>
         
         {/* Hospital Dashboard with Sidebar Navigation */}
         <Route path="/hospital" element={<DashboardLayout />}>
@@ -62,10 +74,11 @@ function App() {
           <Route path="request-blood" element={<HospitalBloodRequest />} />
           <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="nearby" element={<NearbyHospitalsPage />} />
+          <Route path="health-records" element={<HospitalHealthRecords />} />
           <Route path="recognition" element={<DonorRecognition />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="activity" element={<ActivityLog />} />
-          <Route path="settings" element={<Profile />} />
+          <Route path="settings" element={<HospitalSettings />} />
         </Route>
 
         {/* Donor Dashboard with Sidebar Navigation */}

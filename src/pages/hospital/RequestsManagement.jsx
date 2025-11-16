@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, X, Eye, MapPin, Phone, User, Calendar, Droplet, Building2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { getRequestById } from '../../services/requestService';
+import { getRequestById, createRequest, getHospitalRequests } from '../../services/requestService';
+import Modal from '../../components/common/Modal.jsx';
+import { useSelector } from 'react-redux';
 
 function RequestsManagement() {
+  const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,69 +13,52 @@ function RequestsManagement() {
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [requestDetails, setRequestDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [listError, setListError] = useState('');
+  const [loadingList, setLoadingList] = useState(false);
+  const [formData, setFormData] = useState({
+    bloodType: '',
+    urgency: 'normal',
+    unitsNeeded: '',
+    contactPerson: '',
+    contactPhone: '',
+    additionalNotes: '',
+    expiryDate: ''
+  });
+  const [requests, setRequests] = useState([]);
 
-  const requests = [
-    {
-      id: 'REQ-001',
-      patientName: 'John Doe',
-      bloodType: 'O+',
-      units: 3,
-      urgency: 'critical',
-      status: 'pending',
-      createdAt: '2 hours ago',
-      hospital: 'City General Hospital',
-      contactPerson: 'Dr. Smith',
-      contactPhone: '+250 788 123 456'
-    },
-    {
-      id: 'REQ-002',
-      patientName: 'Jane Smith',
-      bloodType: 'A+',
-      units: 2,
-      urgency: 'high',
-      status: 'in_progress',
-      createdAt: '4 hours ago',
-      hospital: 'Central Medical Center',
-      contactPerson: 'Dr. Johnson',
-      contactPhone: '+250 788 234 567'
-    },
-    {
-      id: 'REQ-003',
-      patientName: 'Mike Johnson',
-      bloodType: 'B-',
-      units: 4,
-      urgency: 'medium',
-      status: 'fulfilled',
-      createdAt: '1 day ago',
-      hospital: 'Regional Hospital',
-      contactPerson: 'Dr. Williams',
-      contactPhone: '+250 788 345 678'
-    },
-    {
-      id: 'REQ-004',
-      patientName: 'Sarah Williams',
-      bloodType: 'AB+',
-      units: 1,
-      urgency: 'low',
-      status: 'pending',
-      createdAt: '3 hours ago',
-      hospital: 'Community Health Center',
-      contactPerson: 'Dr. Brown',
-      contactPhone: '+250 788 456 789'
-    },
-    {
-      id: 'REQ-005',
-      patientName: 'David Brown',
-      bloodType: 'O-',
-      units: 5,
-      urgency: 'critical',
-      status: 'cancelled',
-      createdAt: '2 days ago',
-      hospital: 'Emergency Care Unit',
-      contactPerson: 'Dr. Davis',
-      contactPhone: '+250 788 567 890'
-    }
-  ];
+  // Fetch hospital requests from API
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!user?.id) return;
+      try {
+        setLoadingList(true);
+        setListError('');
+        const data = await getHospitalRequests(user.id);
+        const normalized = (data || []).map((r) => ({
+          id: r.id,
+          bloodType: r.blood_type,
+          units: r.units_needed,
+          urgency: (r.urgency || 'normal').toLowerCase(),
+          status: r.status,
+          requestedAt: new Date(r.created_at),
+
+          hospital: r.hospital_name || '',
+          contactPerson: r.contact_person || '',
+          contactPhone: r.contact_phone || r.phone_number || ''
+        }));
+        setRequests(normalized);
+      } catch (err) {
+        console.error('Failed to load requests:', err);
+        setListError('Failed to load requests');
+      } finally {
+        setLoadingList(false);
+      }
+    };
+    fetchRequests();
+  }, [user?.id]);
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
@@ -119,7 +104,7 @@ function RequestsManagement() {
   const filteredRequests = requests.filter(request => {
     if (activeTab !== 'all' && request.status !== activeTab) return false;
     if (searchTerm && !request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !request.bloodType.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      !request.bloodType.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
 
@@ -142,7 +127,7 @@ function RequestsManagement() {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
-    
+
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -268,13 +253,13 @@ function RequestsManagement() {
           <h1 className="text-3xl font-bold text-gray-900">Blood Requests</h1>
           <p className="text-gray-600 mt-1">Manage and track all blood donation requests</p>
         </div>
-        <Link
-          to="/hospital/request-blood"
+        <button
+          onClick={() => setShowCreate(true)}
           className="flex items-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition shadow-lg"
         >
           <Plus className="w-5 h-5" />
           <span>New Request</span>
-        </Link>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -289,11 +274,10 @@ function RequestsManagement() {
           <button
             key={stat.key}
             onClick={() => handleTabChange(stat.key)}
-            className={`p-4 rounded-xl transition ${
-              activeTab === stat.key
+            className={`p-4 rounded-xl transition ${activeTab === stat.key
                 ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-white text-gray-900 hover:shadow-md'
-            }`}
+              }`}
           >
             <p className={`text-2xl font-bold ${activeTab === stat.key ? 'text-white' : 'text-gray-900'}`}>
               {stat.value}
@@ -318,12 +302,6 @@ function RequestsManagement() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Request ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Patient Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Blood Type
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -343,12 +321,6 @@ function RequestsManagement() {
               <tbody className="divide-y divide-gray-200 bg-white">
                 {paginatedRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {request.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.patientName}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
                         {request.bloodType}
@@ -370,7 +342,7 @@ function RequestsManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center justify-center">
-                        <button 
+                        <button
                           onClick={() => handleViewClick(request.id)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center space-x-2 shadow-sm hover:shadow-md"
                           title="View full details"
@@ -436,11 +408,10 @@ function RequestsManagement() {
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-2 rounded text-sm font-medium transition ${
-                        currentPage === page
+                      className={`px-3 py-2 rounded text-sm font-medium transition ${currentPage === page
                           ? 'bg-red-600 text-white'
                           : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
@@ -462,11 +433,11 @@ function RequestsManagement() {
 
       {/* Request Details Modal */}
       {selectedRequestId && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-gray-500/10 backdrop-blur-sm transition-opacity"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[95vh] overflow-hidden flex flex-col relative transform transition-all scale-100 pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -481,200 +452,292 @@ function RequestsManagement() {
             {/* Scrollable Content */}
             <div className="overflow-y-auto flex-1">
               <div className="p-6">
-            {loadingDetails ? (
-              <div className="flex items-center justify-center py-12">
-                <Clock className="w-8 h-8 text-red-600 animate-spin" />
-                <span className="ml-2 text-gray-600">Loading details...</span>
-              </div>
-            ) : requestDetails ? (
-              <div className="space-y-6">
-                {/* Header */}
-                <div className="border-b border-gray-200 pb-4">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      <Droplet className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Blood Request Details</h3>
-                      <p className="text-sm text-gray-500">Request ID: {requestDetails.id}</p>
-                    </div>
+                {loadingDetails ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Clock className="w-8 h-8 text-red-600 animate-spin" />
+                    <span className="ml-2 text-gray-600">Loading details...</span>
                   </div>
-                  <div className="mt-3 flex items-center space-x-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getUrgencyColor(requestDetails.urgency || requestDetails.urgency_level)}`}>
-                      {(requestDetails.urgency || requestDetails.urgency_level || 'normal').toUpperCase()}
-                    </span>
-                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${getStatusColor(requestDetails.status)}`}>
-                      {getStatusIcon(requestDetails.status)}
-                      <span className="text-xs font-semibold capitalize">{requestDetails.status.replace('_', ' ')}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Request Information */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Request Information</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <User className="w-5 h-5 text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Patient Name</p>
-                        <p className="text-sm font-semibold text-gray-900">{requestDetails.patientName || requestDetails.patient_name || 'N/A'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <Droplet className="w-5 h-5 text-red-500 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Blood Type</p>
-                        <p className="text-sm font-semibold text-red-600">{requestDetails.bloodType || requestDetails.blood_type || 'N/A'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <Droplet className="w-5 h-5 text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Units Needed</p>
-                        <p className="text-sm font-semibold text-gray-900">{requestDetails.units || requestDetails.units_needed || 'N/A'} {requestDetails.units === 1 ? 'unit' : 'units'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Requested Time</p>
-                        <p className="text-sm font-semibold text-gray-900">{requestDetails.createdAt || requestDetails.created_at || 'N/A'}</p>
-                      </div>
-                    </div>
-
-                    {requestDetails.expiry_date && (
-                      <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
+                ) : requestDetails ? (
+                  <div className="space-y-6">
+                    {/* Header */}
+                    <div className="border-b border-gray-200 pb-4">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <Droplet className="w-6 h-6" />
+                        </div>
                         <div>
-                          <p className="text-xs text-gray-500 font-medium">Expiry Date</p>
-                          <p className="text-sm font-semibold text-gray-900">{new Date(requestDetails.expiry_date).toLocaleDateString()}</p>
+                          <h3 className="text-2xl font-bold text-gray-900">Blood Request Details</h3>
                         </div>
                       </div>
-                    )}
-
-                    {requestDetails.patient_condition && (
-                      <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
-                        <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Patient Condition</p>
-                          <p className="text-sm font-semibold text-gray-900">{requestDetails.patient_condition}</p>
+                      <div className="mt-3 flex items-center space-x-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getUrgencyColor(requestDetails.urgency || requestDetails.urgency_level)}`}>
+                          {(requestDetails.urgency || requestDetails.urgency_level || 'normal').toUpperCase()}
+                        </span>
+                        <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${getStatusColor(requestDetails.status)}`}>
+                          {getStatusIcon(requestDetails.status)}
+                          <span className="text-xs font-semibold capitalize">{requestDetails.status.replace('_', ' ')}</span>
                         </div>
-                      </div>
-                    )}
-
-                    {requestDetails.additional_notes && (
-                      <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
-                        <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Additional Notes</p>
-                          <p className="text-sm text-gray-900">{requestDetails.additional_notes}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Hospital Information */}
-                <div className="space-y-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2 flex items-center space-x-2">
-                    <Building2 className="w-5 h-5 text-red-600" />
-                    <span>Hospital Information</span>
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <Building2 className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Hospital Name</p>
-                        <p className="text-sm font-semibold text-gray-900">{requestDetails.hospital || requestDetails.hospital_name || 'N/A'}</p>
                       </div>
                     </div>
 
-                    {requestDetails.address && (
-                      <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                        <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Address</p>
-                          <p className="text-sm font-semibold text-gray-900">{requestDetails.address}</p>
-                        </div>
-                      </div>
-                    )}
+                    {/* Request Information */}
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Request Information</h4>
 
-                    <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <User className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Contact Person</p>
-                        <p className="text-sm font-semibold text-gray-900">{requestDetails.contactPerson || requestDetails.contact_person || 'N/A'}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
+                          <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
+
+                        </div>
+
+                        <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <Droplet className="w-5 h-5 text-red-500 mt-0.5" />
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Blood Type</p>
+                            <p className="text-sm font-semibold text-red-600">{requestDetails.bloodType || requestDetails.blood_type || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <Droplet className="w-5 h-5 text-gray-500 mt-0.5" />
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Units Needed</p>
+                            <p className="text-sm font-semibold text-gray-900">{requestDetails.units || requestDetails.units_needed || 'N/A'} {requestDetails.units === 1 ? 'unit' : 'units'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Requested Time</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {requestDetails.createdAt || requestDetails.created_at
+                                ? new Date(requestDetails.createdAt || requestDetails.created_at).toLocaleDateString()
+                                : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {requestDetails.expiry_date && (
+                          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-gray-500 font-medium">Expiry Date</p>
+                              <p className="text-sm font-semibold text-gray-900">{new Date(requestDetails.expiry_date).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Removed separate patient name; condition shown above */}
+
+                        {requestDetails.additional_notes && (
+                          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
+                            <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-gray-500 font-medium">Additional Notes</p>
+                              <p className="text-sm text-gray-900">{requestDetails.additional_notes}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <Phone className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-medium">Contact Phone</p>
-                        <a 
+                    {/* Action Buttons */}
+                    <div className="pt-4 border-t border-gray-200">
+                      {requestDetails.status === 'pending' && (
+                        <div className="flex space-x-3 mb-3">
+                          <button className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Accept Request</span>
+                          </button>
+                          <button className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
+                            <XCircle className="w-4 h-4" />
+                            <span>Decline Request</span>
+                          </button>
+                        </div>
+                      )}
+                      {requestDetails.status === 'in_progress' && (
+                        <div className="flex space-x-3 mb-3">
+                          <button className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Mark as Fulfilled</span>
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex space-x-3">
+                        <a
                           href={`tel:${requestDetails.contactPhone || requestDetails.contact_phone || requestDetails.phone_number || ''}`}
-                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                          className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm flex items-center justify-center space-x-2"
                         >
-                          {requestDetails.contactPhone || requestDetails.contact_phone || requestDetails.phone_number || 'N/A'}
+                          <Phone className="w-4 h-4" />
+                          <span>Contact Hospital</span>
                         </a>
+                        <button className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
+                          Edit Request
+                        </button>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-4 border-t border-gray-200">
-                  {requestDetails.status === 'pending' && (
-                    <div className="flex space-x-3 mb-3">
-                      <button className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Accept Request</span>
-                      </button>
-                      <button className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
-                        <XCircle className="w-4 h-4" />
-                        <span>Decline Request</span>
-                      </button>
-                    </div>
-                  )}
-                  {requestDetails.status === 'in_progress' && (
-                    <div className="flex space-x-3 mb-3">
-                      <button className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center justify-center space-x-2 shadow-sm">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Mark as Fulfilled</span>
-                      </button>
-                    </div>
-                  )}
-                  <div className="flex space-x-3">
-                    <a 
-                      href={`tel:${requestDetails.contactPhone || requestDetails.contact_phone || requestDetails.phone_number || ''}`}
-                      className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm flex items-center justify-center space-x-2"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>Contact Hospital</span>
-                    </a>
-                    <button className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
-                      Edit Request
-                    </button>
+                ) : (
+                  <div className="text-center py-12">
+                    <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Failed to load request details</p>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Failed to load request details</p>
-              </div>
-            )}
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Create New Request Modal */}
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Blood Request">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setCreating(true);
+            setCreateError('');
+            try {
+              const payload = {
+                hospitalId: user?.id,
+                bloodType: formData.bloodType,
+                unitsNeeded: parseInt(formData.unitsNeeded || '0', 10),
+                urgency: formData.urgency,
+                contactPerson: formData.contactPerson,
+                contactPhone: formData.contactPhone,
+                additionalNotes: formData.additionalNotes,
+                expiryDate: formData.expiryDate,
+              };
+              const res = await createRequest(payload);
+              if (res?.success) {
+                setShowCreate(false);
+                setFormData({
+                  bloodType: '',
+                  urgency: 'normal',
+                  unitsNeeded: '',
+                  contactPerson: '',
+                  contactPhone: '',
+                  additionalNotes: '',
+                  expiryDate: '',
+                });
+                // refresh list
+                try {
+                  if (user?.id) {
+                    const data = await getHospitalRequests(user.id);
+                    const normalized = (data || []).map((r) => ({
+                      id: r.id,
+                      bloodType: r.blood_type,
+                      units: r.units_needed,
+                      urgency: (r.urgency || 'normal').toLowerCase(),
+                      status: r.status,
+                      requestedAt: new Date(r.created_at),
+                      patientName: r.patient_condition || 'Patient',
+                      hospital: r.hospital_name || '',
+                      contactPerson: r.contact_person || '',
+                      contactPhone: r.contact_phone || r.phone_number || '',
+                    }));
+                    setRequests(normalized);
+                  }
+                } catch (refreshErr) {
+                  console.error('Refresh after create failed:', refreshErr);
+                }
+              } else {
+                setCreateError(res?.error || 'Failed to create request');
+              }
+            } catch (err) {
+              setCreateError(err.message || 'Failed to create request');
+            } finally {
+              setCreating(false);
+            }
+          }}
+          className="space-y-4"
+        >
+          {createError && <div className="text-red-600 text-sm">{createError}</div>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Blood Type</label>
+              <select
+                value={formData.bloodType}
+                onChange={(e) => setFormData({ ...formData, bloodType: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+                required
+              >
+                <option value="">Select blood type</option>
+                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bt => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Urgency</label>
+              <select
+                value={formData.urgency}
+                onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="critical">Critical</option>
+                <option value="urgent">Urgent</option>
+                <option value="normal">Normal</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Units Needed</label>
+              <input
+                type="number"
+                min="1"
+                value={formData.unitsNeeded}
+                onChange={(e) => setFormData({ ...formData, unitsNeeded: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="e.g. 3"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+              <input
+                type="date"
+                value={formData.expiryDate}
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+        
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+              <input
+                type="text"
+                value={formData.contactPerson}
+                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
+              <input
+                type="tel"
+                value={formData.contactPhone}
+                onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+              <textarea
+                value={formData.additionalNotes}
+                onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+                rows="3"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg border">Cancel</button>
+            <button type="submit" disabled={creating} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">
+              {creating ? 'Creating...' : 'Create Request'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Bell, Search, MessageSquare, HelpCircle, Droplet } from 'lucide-react';
+import Notifications from '../Notifications';
+import { fetchUnreadCount } from '../../features/notifications/notificationSlice';
 
 function TopBar() {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const [notifications] = useState(5);
-  const [messages] = useState(2);
+  const { unreadCount } = useSelector((state) => state.notifications);
+  const [messages] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchUnreadCount(user.id));
+    }
+  }, [user?.id, dispatch]);
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -46,11 +56,14 @@ function TopBar() {
           </button>
 
           {/* Notifications */}
-          <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+          <button
+            onClick={() => setNotificationsOpen(true)}
+            className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+          >
             <Bell className="w-6 h-6" />
-            {notifications > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                {notifications}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
@@ -67,6 +80,12 @@ function TopBar() {
           </div>
         </div>
       </div>
+
+      {/* Notifications Panel */}
+      <Notifications
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
     </header>
   );
 }

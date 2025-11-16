@@ -70,7 +70,9 @@ function DonorAppointments() {
       setHospitals(data);
     } catch (err) {
       console.error('Failed to fetch hospitals:', err);
-      setError('Failed to load hospitals. Please refresh the page.');
+      const message = 'Failed to load hospitals. Please refresh the page.';
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -85,7 +87,9 @@ function DonorAppointments() {
       setError(null);
     } catch (err) {
       console.error('Failed to fetch appointments:', err);
-      setError('Failed to load appointments. Please try again.');
+      const message = 'Failed to load appointments. Please try again.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -247,74 +251,74 @@ function DonorAppointments() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
-          <p className="text-gray-600 mt-1">Manage your donation appointments</p>
+          <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
+          <p className="text-gray-600 mt-0.5 text-sm">Manage your donation appointments</p>
         </div>
         <button 
           onClick={() => setShowBookingModal(true)}
-          className="flex items-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition shadow-lg"
+          className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition shadow"
         >
-          <Plus className="w-5 h-5" />
-          <span>Book Appointment</span>
+          <Plus className="w-4 h-4" />
+          <span className="text-sm font-medium">Book Appointment</span>
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Upcoming</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{upcomingAppointments.length}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{upcomingAppointments.length}</p>
             </div>
-            <Calendar className="w-12 h-12 text-blue-600" />
+            <Calendar className="w-8 h-8 text-blue-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Confirmed</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">
+              <p className="text-2xl font-bold text-green-600 mt-1">
                 {appointments.filter(a => a.status === 'confirmed').length}
               </p>
             </div>
-            <CheckCircle className="w-12 h-12 text-green-600" />
+            <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-3xl font-bold text-yellow-600 mt-2">
+              <p className="text-2xl font-bold text-yellow-600 mt-1">
                 {appointments.filter(a => a.status === 'pending').length}
               </p>
             </div>
-            <AlertCircle className="w-12 h-12 text-yellow-600" />
+            <AlertCircle className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">
+              <p className="text-2xl font-bold text-blue-600 mt-1">
                 {appointments.filter(a => a.status === 'completed').length}
               </p>
             </div>
-            <CheckCircle className="w-12 h-12 text-blue-600" />
+            <CheckCircle className="w-8 h-8 text-blue-600" />
           </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex space-x-2">
+      <div className="bg-white rounded-lg shadow-sm px-3 py-2">
+        <div className="flex space-x-2 text-sm">
           <button
             onClick={() => setFilterStatus('all')}
             className={`px-4 py-2 rounded-lg font-medium transition ${
@@ -359,54 +363,54 @@ function DonorAppointments() {
       </div>
 
       {/* Appointments Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3"></th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {paginatedAppointments.map((appointment) => (
                 <tr key={appointment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-2.5 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                        <Hospital className="w-5 h-5 text-white" />
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                        <Hospital className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-gray-900">{appointment.hospital}</div>
-                        <div className="text-xs text-gray-500 capitalize">{appointment.type}</div>
+                        <div className="text-sm font-semibold text-gray-900 line-clamp-1">{appointment.hospital}</div>
+                        <div className="text-[11px] text-gray-500 capitalize">{appointment.type}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td className="px-4 py-2.5 whitespace-nowrap text-gray-700">
                     {new Date(appointment.date).toLocaleDateString('en-US', {
                       weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{appointment.time}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{appointment.address}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{appointment.phone}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appointment.status)}`}>
+                  <td className="px-4 py-2.5 whitespace-nowrap text-gray-700">{appointment.time}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap text-gray-700 max-w-xs truncate">{appointment.address}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap text-gray-700">{appointment.phone}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${getStatusColor(appointment.status)}`}>
                       {getStatusIcon(appointment.status)}
                       <span className="capitalize">{appointment.status}</span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <td className="px-4 py-2.5 whitespace-nowrap text-right text-sm">
                     {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
                       <button
                         onClick={() => handleCancelAppointment(appointment.id)}
                         disabled={loading}
-                        className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium disabled:opacity-50"
+                        className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium disabled:opacity-50 text-xs"
                       >
                         {loading ? 'Cancelling...' : 'Cancel'}
                       </button>
@@ -419,7 +423,7 @@ function DonorAppointments() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm">
           <div className="text-sm text-gray-600">
             Showing {filteredAppointments.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, filteredAppointments.length)} of {filteredAppointments.length}
           </div>
@@ -461,11 +465,17 @@ function DonorAppointments() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-white border-l-4 border-red-400 rounded-xl shadow-sm p-5 flex items-start justify-between">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+            <div>
+              <p className="text-gray-900 font-semibold">We couldn't load your appointments.</p>
+              <p className="text-gray-600 text-sm mt-1">{error}</p>
+            </div>
+          </div>
           <button 
             onClick={fetchDonorAppointments}
-            className="mt-2 text-red-600 hover:text-red-700 font-medium"
+            className="text-sm font-medium text-red-600 hover:text-red-700"
           >
             Try Again
           </button>
@@ -489,7 +499,7 @@ function DonorAppointments() {
 
       {/* Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">

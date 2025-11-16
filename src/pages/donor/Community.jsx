@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Users, MessageSquare, Heart, Award, TrendingUp, Calendar, MapPin, Share2, ThumbsUp, MessageCircle, Send, Search, Filter, UserPlus, Bell } from 'lucide-react';
+import notificationService from '../../services/notificationService';
+import donorService from '../../services/donorService';
+import communityService from '../../services/communityService';
 
 function Community() {
+  const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('feed');
   const [newPost, setNewPost] = useState('');
+  const [feed, setFeed] = useState([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedError, setFeedError] = useState('');
+  const [donStats, setDonStats] = useState({ totalDonations: 0, lives: 0 });
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState('');
 
   // Community stats
   const communityStats = {
@@ -13,113 +24,90 @@ function Community() {
     livesImpacted: 45702
   };
 
-  // Community feed posts
-  const posts = [
-    {
-      id: 1,
-      author: {
-        name: 'Sarah Johnson',
-        avatar: 'SJ',
-        bloodType: 'O+',
-        donations: 15,
-        level: 'Gold Donor'
-      },
-      content: 'Just completed my 15th donation today! Feeling grateful to be able to help save lives. Every drop counts! 💉❤️',
-      timestamp: '2 hours ago',
-      likes: 45,
-      comments: 12,
-      image: null,
-      type: 'milestone'
-    },
-    {
-      id: 2,
-      author: {
-        name: 'Michael Chen',
-        avatar: 'MC',
-        bloodType: 'A+',
-        donations: 8,
-        level: 'Silver Donor'
-      },
-      content: 'Looking for O- donors! King Faisal Hospital has an urgent need. Please consider donating if you\'re eligible. 🆘',
-      timestamp: '5 hours ago',
-      likes: 89,
-      comments: 23,
-      image: null,
-      type: 'urgent'
-    },
-    {
-      id: 3,
-      author: {
-        name: 'Emma Williams',
-        avatar: 'EW',
-        bloodType: 'B+',
-        donations: 22,
-        level: 'Platinum Donor'
-      },
-      content: 'Celebrating World Blood Donor Day with my fellow heroes! Thank you all for making a difference. 🌍❤️',
-      timestamp: '1 day ago',
-      likes: 156,
-      comments: 34,
-      image: null,
-      type: 'celebration'
-    },
-    {
-      id: 4,
-      author: {
-        name: 'David Brown',
-        avatar: 'DB',
-        bloodType: 'AB+',
-        donations: 5,
-        level: 'Bronze Donor'
-      },
-      content: 'First time donor here! The experience was amazing and the staff at Rwanda Military Hospital were so supportive. Can\'t wait for my next donation! 💪',
-      timestamp: '2 days ago',
-      likes: 67,
-      comments: 18,
-      image: null,
-      type: 'story'
-    }
-  ];
+  // Fetch real-time community feed from notifications and donor stats
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return;
+      try {
+        setFeedLoading(true);
+        setFeedError('');
+        // Notifications as feed items
+        const notifs = await notificationService.getUserNotifications(user.id);
+        const mapped = (notifs || []).map((n) => ({
+          id: n.id,
+          author: {
+            name: n.data?.hospitalName || 'Hospital',
+            avatar: (n.data?.hospitalName || 'HN').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase(),
+            bloodType: n.data?.bloodType || '—',
+            donations: undefined,
+            level: (n.data?.urgency || 'normal').toUpperCase()
+          },
+          content: n.message || n.title,
+          timestamp: new Date(n.createdAt).toLocaleString(),
+          likes: 0,
+          comments: 0,
+          image: null,
+          type: (n.data?.urgency === 'critical' || n.data?.urgency === 'urgent') ? 'urgent' : 'story'
+        }));
+        setFeed(mapped);
 
-  // Upcoming events
-  const events = [
-    {
-      id: 1,
-      title: 'Blood Drive at University of Rwanda',
-      date: '2025-10-28',
-      time: '09:00 AM - 04:00 PM',
-      location: 'UR Campus, Kigali',
-      attendees: 45,
-      organizer: 'Rwanda Blood Bank'
-    },
-    {
-      id: 2,
-      title: 'Donor Appreciation Day',
-      date: '2025-11-05',
-      time: '02:00 PM - 06:00 PM',
-      location: 'King Faisal Hospital',
-      attendees: 78,
-      organizer: 'King Faisal Hospital'
-    },
-    {
-      id: 3,
-      title: 'World Blood Donor Day Celebration',
-      date: '2025-11-14',
-      time: '10:00 AM - 05:00 PM',
-      location: 'Kigali Convention Center',
-      attendees: 234,
-      organizer: 'Ministry of Health'
-    }
-  ];
+        // Donor stats from donation history
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_URL}/api/donations/donor/${user.id}`);
+        const json = await res.json();
+        if (json.status === 'success') {
+          const rows = Array.isArray(json.data) ? json.data : [];
+          const units = rows.reduce((s, r) => s + (Number(r.units)||0), 0);
+          setDonStats({ totalDonations: rows.length, lives: units * 3 });
+        }
+      } catch (e) {
+        setFeedError(e.message || 'Failed to load community feed');
+      } finally {
+        setFeedLoading(false);
+      }
+    };
+    load();
+  }, [user?.id]);
 
-  // Top donors leaderboard
-  const topDonors = [
-    { rank: 1, name: 'John Smith', donations: 45, bloodType: 'O+', points: 4500 },
-    { rank: 2, name: 'Emma Williams', donations: 38, bloodType: 'B+', points: 3800 },
-    { rank: 3, name: 'Michael Chen', donations: 32, bloodType: 'A+', points: 3200 },
-    { rank: 4, name: 'Sarah Johnson', donations: 28, bloodType: 'O-', points: 2800 },
-    { rank: 5, name: 'David Brown', donations: 25, bloodType: 'AB+', points: 2500 }
-  ];
+  // Events live data
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState('');
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setEventsLoading(true);
+        setEventsError('');
+        const data = await communityService.getEvents({ upcoming: true });
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setEventsError(e?.message || 'Failed to load events');
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+    loadEvents();
+  }, []);
+
+  // Leaderboard live data
+  const [topDonors, setTopDonors] = useState([]);
+  const [leaderLoading, setLeaderLoading] = useState(false);
+  const [leaderError, setLeaderError] = useState('');
+  useEffect(() => {
+    const loadBoard = async () => {
+      try {
+        setLeaderLoading(true);
+        setLeaderError('');
+        const data = await communityService.getLeaderboard({ limit: 10 });
+        setTopDonors(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setLeaderError(e?.message || 'Failed to load leaderboard');
+      } finally {
+        setLeaderLoading(false);
+      }
+    };
+    loadBoard();
+  }, []);
 
   const getPostTypeColor = (type) => {
     switch (type) {
@@ -176,7 +164,7 @@ function Community() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Donations</p>
-              <p className="text-3xl font-bold text-red-600 mt-2">{communityStats.totalDonations.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-red-600 mt-2">{donStats.totalDonations.toLocaleString()}</p>
             </div>
             <Award className="w-12 h-12 text-red-600" />
           </div>
@@ -186,7 +174,7 @@ function Community() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Lives Impacted</p>
-              <p className="text-3xl font-bold text-purple-600 mt-2">{communityStats.livesImpacted.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-purple-600 mt-2">{donStats.lives.toLocaleString()}</p>
             </div>
             <TrendingUp className="w-12 h-12 text-purple-600" />
           </div>
@@ -260,17 +248,66 @@ function Community() {
                           <Calendar className="w-5 h-5" />
                         </button>
                       </div>
-                      <button className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
+                      <button
+                        disabled={posting || !newPost.trim()}
+                        onClick={async () => {
+                          if (!newPost.trim() || !user?.id) return;
+                          try {
+                            setPosting(true);
+                            setPostError('');
+                            const created = await communityService.createPost({
+                              authorId: user.id,
+                              content: newPost.trim(),
+                              type: 'story',
+                            });
+                            // Prepend to feed
+                            setFeed([
+                              {
+                                id: created.id,
+                                author: {
+                                  name: created.author_name || (user.name || user.email || 'You'),
+                                  avatar: (created.author_name || user.name || 'YN').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase(),
+                                  bloodType: created.author_blood_type || '—',
+                                  donations: undefined,
+                                  level: 'POST'
+                                },
+                                content: created.content,
+                                timestamp: new Date(created.created_at || Date.now()).toLocaleString(),
+                                likes: 0,
+                                comments: 0,
+                                image: null,
+                                type: created.type || 'story'
+                              },
+                              ...feed,
+                            ]);
+                            setNewPost('');
+                          } catch (e) {
+                            setPostError(e?.message || 'Failed to create post');
+                          } finally {
+                            setPosting(false);
+                          }
+                        }}
+                        className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                      >
                         <Send className="w-4 h-4" />
-                        <span>Post</span>
+                        <span>{posting ? 'Posting...' : 'Post'}</span>
                       </button>
                     </div>
+                    {postError && (
+                      <div className="mt-2 text-sm text-red-600">{postError}</div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Posts Feed */}
-              {posts.map((post) => (
+              {/* Posts Feed (real-time via notifications) */}
+              {feedError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{feedError}</div>
+              )}
+              {feedLoading && (
+                <div className="text-sm text-gray-600">Loading feed...</div>
+              )}
+              {feed.map((post) => (
                 <div key={post.id} className={`bg-white rounded-xl shadow-sm p-6 ${getPostTypeColor(post.type)}`}>
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -315,6 +352,12 @@ function Community() {
 
           {activeTab === 'events' && (
             <div className="space-y-4">
+              {eventsError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{eventsError}</div>
+              )}
+              {eventsLoading && (
+                <div className="text-sm text-gray-600">Loading events...</div>
+              )}
               {events.map((event) => (
                 <div key={event.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
                   <div className="flex items-start justify-between mb-4">
@@ -363,6 +406,12 @@ function Community() {
                 </h2>
               </div>
               <div className="p-6">
+                {leaderError && (
+                  <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{leaderError}</div>
+                )}
+                {leaderLoading && (
+                  <div className="text-sm text-gray-600">Loading leaderboard...</div>
+                )}
                 <div className="space-y-4">
                   {topDonors.map((donor) => (
                     <div
@@ -384,7 +433,7 @@ function Community() {
                           <h3 className="font-bold text-gray-900">{donor.name}</h3>
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
                             <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
-                              {donor.bloodType}
+                              {donor.blood_type || donor.bloodType}
                             </span>
                             <span>•</span>
                             <span>{donor.donations} donations</span>

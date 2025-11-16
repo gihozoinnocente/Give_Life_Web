@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 const RecentRequests = ({ requests }) => {
   const mockRequests = requests || [
@@ -89,9 +90,9 @@ const RecentRequests = ({ requests }) => {
           <h3 className="text-lg font-bold text-gray-900">Recent Blood Requests</h3>
           <p className="text-sm text-gray-600 mt-1">Latest requests from your hospital</p>
         </div>
-        <button className="text-sm font-medium text-red-600 hover:text-red-700">
+        <Link to="/hospital/requests" className="text-sm font-medium text-red-600 hover:text-red-700">
           View All
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-4">

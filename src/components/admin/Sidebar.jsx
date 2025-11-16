@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  LayoutDashboard, Droplet, Calendar, MapPin, Award, Activity, 
-  Settings, LogOut, ChevronLeft, ChevronRight, Menu, X, Heart, 
-  Users, Bell, FileText
+  LayoutDashboard, Building2, PlusSquare, Users, BarChart3,
+  Settings, LogOut, ChevronLeft, ChevronRight, Menu, X, Shield
 } from 'lucide-react';
 import { logout } from '../../features/auth/authSlice';
 
-function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
+function AdminSidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -21,58 +20,11 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
   };
 
   const menuItems = [
-    {
-      title: 'Dashboard',
-      icon: LayoutDashboard,
-      path: '/donor/dashboard',
-      badge: null
-    },
-    {
-      title: 'My Donations',
-      icon: Droplet,
-      path: '/donor/donations',
-      badge: null
-    },
-    {
-      title: 'Appointments',
-      icon: Calendar,
-      path: '/donor/appointments',
-      badge: appointmentCount > 0 ? String(appointmentCount) : null
-    },
-    {
-      title: 'Find Hospitals',
-      icon: MapPin,
-      path: '/donor/hospitals',
-      badge: null
-    },
-    {
-      title: 'Achievements',
-      icon: Award,
-      path: '/donor/achievements',
-      badge: null
-    },
-    {
-      title: 'Health Records',
-      icon: FileText,
-      path: '/donor/health',
-      badge: null
-    },
-    {
-      title: 'Community',
-      icon: Users,
-      path: '/donor/community',
-      badge: null
-    },
-    {
-      title: 'Activity Log',
-      icon: Activity,
-      path: '/donor/activity',
-      badge: null
-    }
+    { title: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { title: 'Hospitals', icon: Building2, path: '/admin/hospitals' }
   ];
 
   const isActive = (path) => location.pathname === path;
-
 
   return (
     <>
@@ -105,16 +57,16 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
           {isOpen ? (
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-                <Heart className="w-6 h-6 text-white" fill="currentColor" />
+                <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
                 <span className="text-lg font-bold text-gray-900">Give Life</span>
-                <p className="text-xs text-gray-500">Donor Portal</p>
+                <p className="text-xs text-gray-500">Admin Portal</p>
               </div>
             </Link>
           ) : (
             <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mx-auto">
-              <Heart className="w-6 h-6 text-white" fill="currentColor" />
+              <Shield className="w-6 h-6 text-white" />
             </div>
           )}
         </div>
@@ -127,13 +79,13 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
           {isOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
 
+        
         {/* Navigation Menu */}
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           <div className="space-y-0.5">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
-
               return (
                 <Link
                   key={item.path}
@@ -141,46 +93,27 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
                   onClick={() => setIsMobileOpen(false)}
                   className={`
                     flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200
-                    ${active
-                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }
+                    ${active ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' : 'text-gray-700 hover:bg-gray-100'}
                     ${!isOpen && 'justify-center'}
                   `}
                   title={!isOpen ? item.title : ''}
                 >
                   <Icon className={`${isOpen ? 'w-5 h-5' : 'w-6 h-6'} flex-shrink-0`} />
-                  {isOpen && (
-                    <>
-                      <span className="flex-1 font-medium">{item.title}</span>
-                      {item.badge && (
-                        <span className={`
-                          px-2 py-0.5 text-xs font-semibold rounded-full
-                          ${active ? 'bg-white text-red-600' : 'bg-red-100 text-red-600'}
-                        `}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {isOpen && <span className="flex-1 font-medium">{item.title}</span>}
                 </Link>
               );
             })}
           </div>
         </nav>
 
-        {/* Settings & Logout Section */}
+        {/* Settings & Logout */}
         <div className="p-2 border-t border-gray-200 space-y-1">
-          {/* Settings Button */}
           <Link
-            to="/donor/settings"
+            to="/admin/settings"
             onClick={() => setIsMobileOpen(false)}
             className={`
               w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200
-              ${isActive('/donor/settings')
-                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
-                : 'text-gray-700 hover:bg-gray-100'
-              }
+              ${isActive('/admin/settings') ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' : 'text-gray-700 hover:bg-gray-100'}
               ${!isOpen && 'justify-center'}
             `}
             title={!isOpen ? 'Settings' : ''}
@@ -189,7 +122,6 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
             {isOpen && <span className="font-medium">Settings</span>}
           </Link>
 
-          {/* Logout Button */}
           <button
             onClick={handleLogout}
             className={`
@@ -207,4 +139,4 @@ function Sidebar({ isOpen, setIsOpen, appointmentCount = 0 }) {
   );
 }
 
-export default Sidebar;
+export default AdminSidebar;

@@ -61,28 +61,10 @@ function AboutUs() {
 
   const team = [
     {
-      name: 'Dr. Sarah Johnson',
-      role: 'Chief Medical Officer',
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
-      bio: '15+ years in healthcare management and blood donation services.'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Technology Director',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-      bio: 'Expert in healthcare technology and digital transformation.'
-    },
-    {
-      name: 'Amina Okonkwo',
-      role: 'Community Outreach Lead',
-      image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop',
-      bio: 'Passionate about building donor communities across Africa.'
-    },
-    {
-      name: 'James Mutua',
-      role: 'Operations Manager',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-      bio: 'Ensuring smooth operations and donor satisfaction.'
+      name: 'Innocente GIHOZO',
+      role: 'CEO & Founder at Give Life',
+      image: '/images/cmo.jpeg',
+      bio: 'Extensive experience in designing and leading innovative healthcare solutions.'
     }
   ];
 
@@ -181,8 +163,6 @@ function AboutUs() {
         </div>
       </section>
 
-      {/* Timeline */}
-      {/* Team Section */}
       <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -190,11 +170,11 @@ function AboutUs() {
             <p className="text-xl text-gray-600">Dedicated professionals committed to saving lives</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 justify-items-center place-content-center">
             {team.map((member, index) => (
               <div 
                 key={index}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-2 cursor-pointer"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2 cursor-pointer w-80"
                 onMouseEnter={() => setActiveTeamMember(index)}
                 onMouseLeave={() => setActiveTeamMember(null)}
               >
@@ -220,7 +200,6 @@ function AboutUs() {
         </div>
       </section>
 
-      {/* Contact CTA */}
       <section className="py-20 px-4 bg-gradient-to-r from-red-900 to-pink-700 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-6">Get In Touch</h2>
@@ -234,7 +213,7 @@ function AboutUs() {
                 <Phone className="w-7 h-7" />
               </div>
               <div className="font-semibold mb-1">Phone</div>
-              <div className="text-red-100">+250 XXX XXX XXX</div>
+              <div className="text-red-100">+250 783 742 810</div>
             </div>
             
             <div className="flex flex-col items-center">

@@ -22,7 +22,7 @@ function AppointmentsPage() {
   const hospitalId = getHospitalId();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('all'); // all, day, week, month
+  const [viewMode, setViewMode] = useState('all'); 
   const [filterStatus, setFilterStatus] = useState('all');
   
   // API data states
@@ -38,6 +38,9 @@ function AppointmentsPage() {
   // Modal state
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [confirmingConfirm, setConfirmingConfirm] = useState(false);
+  const [confirmingComplete, setConfirmingComplete] = useState(false);
+  const [completionUnits, setCompletionUnits] = useState('1');
 
   // Fetch appointments on component mount and when filters change
   useEffect(() => {
@@ -84,10 +87,6 @@ function AppointmentsPage() {
   };
 
   const handleConfirmAppointment = async (appointmentId) => {
-    if (!confirm('Confirm this appointment?')) {
-      return;
-    }
-    
     try {
       setLoading(true);
       const result = await appointmentService.updateAppointment(appointmentId, {
@@ -110,15 +109,14 @@ function AppointmentsPage() {
     }
   };
 
-  const handleCompleteAppointment = async (appointmentId) => {
-    if (!confirm('Mark this appointment as completed?')) {
-      return;
-    }
-    
+  const handleCompleteAppointment = async (appointmentId, units) => {
+    const donationUnits = units ? Number(units) || 1 : 1;
+
     try {
       setLoading(true);
       const result = await appointmentService.updateAppointment(appointmentId, {
-        status: 'completed'
+        status: 'completed',
+        donationUnits
       });
       
       if (result.success) {
@@ -141,10 +139,6 @@ function AppointmentsPage() {
   };
 
   const handleCancelAppointment = async (appointmentId) => {
-    if (!confirm('Are you sure you want to cancel this appointment?')) {
-      return;
-    }
-    
     try {
       setLoading(true);
       const result = await appointmentService.updateAppointment(appointmentId, {
@@ -183,14 +177,39 @@ function AppointmentsPage() {
     };
   }, [showDetails]);
 
-  const handleViewDetails = (appointment) => {
-    setSelectedAppointment(appointment);
-    setShowDetails(true);
+  const handleViewDetails = async (appointment) => {
+    try {
+      setLoading(true);
+      // Fetch fresh details to ensure donationUnits is present after completion
+      const fresh = await appointmentService.getAppointmentById(appointment.id);
+      const detailed = fresh || appointment;
+      setSelectedAppointment({
+        ...appointment,
+        ...detailed,
+        donationUnits: detailed.donationUnits ?? appointment.donationUnits,
+      });
+      setConfirmingConfirm(false);
+      setConfirmingComplete(false);
+      setCompletionUnits(detailed.donationUnits ? String(detailed.donationUnits) : '1');
+      setShowDetails(true);
+    } catch (e) {
+      // Fallback to given appointment if detail fetch fails
+      setSelectedAppointment(appointment);
+      setConfirmingConfirm(false);
+      setConfirmingComplete(false);
+      setCompletionUnits(appointment.donationUnits ? String(appointment.donationUnits) : '1');
+      setShowDetails(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseModal = () => {
     setShowDetails(false);
     setSelectedAppointment(null);
+    setConfirmingConfirm(false);
+    setConfirmingComplete(false);
+    setCompletionUnits('1');
   };
 
   const getStatusColor = (status) => {
@@ -266,82 +285,82 @@ function AppointmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
-          <p className="text-gray-600 mt-1">Manage donation appointments and schedules</p>
+          <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
+          <p className="text-gray-600 mt-0.5 text-sm">Manage donation appointments and schedules</p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-white rounded-lg shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-xl font-bold text-gray-900 mt-0.5">{stats.total}</p>
             </div>
-            <Calendar className="w-8 h-8 text-blue-600" />
+            <Calendar className="w-7 h-7 text-blue-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Confirmed</p>
-              <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
+              <p className="text-xl font-bold text-green-600 mt-0.5">{stats.confirmed}</p>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
+            <CheckCircle className="w-7 h-7 text-green-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              <p className="text-xl font-bold text-yellow-600 mt-0.5">{stats.pending}</p>
             </div>
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
+            <AlertCircle className="w-7 h-7 text-yellow-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.completed}</p>
+              <p className="text-xl font-bold text-blue-600 mt-0.5">{stats.completed}</p>
             </div>
-            <CheckCircle className="w-8 h-8 text-blue-600" />
+            <CheckCircle className="w-7 h-7 text-blue-600" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Cancelled</p>
-              <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+              <p className="text-xl font-bold text-red-600 mt-0.5">{stats.cancelled}</p>
             </div>
-            <XCircle className="w-8 h-8 text-red-600" />
+            <XCircle className="w-7 h-7 text-red-600" />
           </div>
         </div>
       </div>
 
       {/* Calendar & Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 mb-4">
           {/* Date Navigation */}
-          <div className="flex items-center space-x-4">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
+          <div className="flex items-center space-x-3">
+            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition">
               <ChevronLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div className="text-center">
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-base font-semibold text-gray-900">
                 {selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
+            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition">
               <ChevronRight className="w-5 h-5 text-gray-600" />
             </button>
           </div>
@@ -350,7 +369,7 @@ function AppointmentsPage() {
           <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 viewMode === 'all' ? 'bg-white text-red-600 shadow' : 'text-gray-600'
               }`}
             >
@@ -358,7 +377,7 @@ function AppointmentsPage() {
             </button>
             <button
               onClick={() => setViewMode('day')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 viewMode === 'day' ? 'bg-white text-red-600 shadow' : 'text-gray-600'
               }`}
             >
@@ -366,7 +385,7 @@ function AppointmentsPage() {
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 viewMode === 'week' ? 'bg-white text-red-600 shadow' : 'text-gray-600'
               }`}
             >
@@ -374,7 +393,7 @@ function AppointmentsPage() {
             </button>
             <button
               onClick={() => setViewMode('month')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 viewMode === 'month' ? 'bg-white text-red-600 shadow' : 'text-gray-600'
               }`}
             >
@@ -384,7 +403,7 @@ function AppointmentsPage() {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-2">
           {[
             { value: 'all', label: 'All', count: stats.total },
             { value: 'confirmed', label: 'Confirmed', count: stats.confirmed },
@@ -395,7 +414,7 @@ function AppointmentsPage() {
             <button
               key={filter.value}
               onClick={() => setFilterStatus(filter.value)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 filterStatus === filter.value
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -408,11 +427,11 @@ function AppointmentsPage() {
       </div>
 
       {/* Appointments List */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Appointments Timeline */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+        <div className="lg:col-span-2 space-y-3">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
               {viewMode === 'all' ? 'All Appointments' : "Today's Schedule"}
             </h2>
             
@@ -439,77 +458,43 @@ function AppointmentsPage() {
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full divide-y divide-gray-200">
+                <table className="w-full divide-y divide-gray-200 text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Donor</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Donor</th>
+                        <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-3 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {paginatedAppointments.map((appointment) => (
-                        <tr key={appointment.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span>{appointment.time}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="flex items-center space-x-3">
+                      <tr key={appointment.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="flex items-center space-x-2.5">
                               <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                 {appointment.donorName.split(' ').map(n => n[0]).join('')}
                               </div>
                               <div>
-                                <div className="text-sm font-semibold text-gray-900">{appointment.donorName}</div>
-                                <div className="text-xs text-gray-500">ID: {appointment.donorId}</div>
+                                <div className="text-sm font-semibold text-gray-900 line-clamp-1">{appointment.donorName}</div>
+                              {/* <div className="text-xs text-gray-500">ID: {appointment.donorId}</div> */}
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appointment.status)}`}>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${getStatusColor(appointment.status)}`}>
                               {getStatusIcon(appointment.status)}
                               <span className="capitalize">{appointment.status}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="px-3 py-2.5 whitespace-nowrap text-center text-sm">
+                            <div className="flex items-center justify-center">
                               <button
                                 onClick={() => handleViewDetails(appointment)}
-                                className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-xs font-medium flex items-center space-x-1"
+                                className="px-2.5 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-[11px] font-medium flex items-center space-x-1"
                               >
                                 <Eye className="w-4 h-4" />
                                 <span>View Details</span>
                               </button>
-                              {appointment.status === 'pending' && (
-                                <>
-                                  <button 
-                                    onClick={() => handleConfirmAppointment(appointment.id)}
-                                    disabled={loading}
-                                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 text-xs"
-                                  >
-                                    Confirm
-                                  </button>
-                                  <button 
-                                    onClick={() => handleCancelAppointment(appointment.id)}
-                                    disabled={loading}
-                                    className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 text-xs"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              )}
-                              {appointment.status === 'confirmed' && (
-                                <button 
-                                  onClick={() => handleCompleteAppointment(appointment.id)}
-                                  disabled={loading}
-                                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 text-xs"
-                                >
-                                  Complete
-                                </button>
-                              )}
                             </div>
                           </td>
                         </tr>
@@ -518,7 +503,7 @@ function AppointmentsPage() {
                   </table>
 
                 {/* Pagination Controls */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm">
                   <div className="text-sm text-gray-600">
                     Showing {filteredAppointments.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, filteredAppointments.length)} of {filteredAppointments.length}
                   </div>
@@ -684,6 +669,16 @@ function AppointmentsPage() {
                   </p>
                 </div>
 
+                {/* Donation Units (visible when completed) */}
+                {selectedAppointment.status === 'completed' && (
+                  <div className="bg-red-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Donation Units</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {selectedAppointment.donationUnits ? `${selectedAppointment.donationUnits} unit${selectedAppointment.donationUnits > 1 ? 's' : ''}` : '—'}
+                    </p>
+                  </div>
+                )}
+
                 {/* Donor ID */}
                 <div className="bg-gray-50 rounded-lg p-3 md:col-span-2">
                   <p className="text-xs text-gray-500 font-medium mb-1">Donor ID</p>
@@ -700,46 +695,136 @@ function AppointmentsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-gray-200 flex space-x-3">
-                {selectedAppointment.status === 'pending' && (
-                  <>
-                    <button 
-                      onClick={() => {
-                        handleCloseModal();
-                        handleConfirmAppointment(selectedAppointment.id);
-                      }}
-                      disabled={loading}
-                      className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Confirm</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        handleCloseModal();
-                        handleCancelAppointment(selectedAppointment.id);
-                      }}
-                      disabled={loading}
-                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span>Cancel</span>
-                    </button>
-                  </>
-                )}
-                {selectedAppointment.status === 'confirmed' && (
-                  <button 
-                    onClick={() => {
-                      handleCloseModal();
-                      handleCompleteAppointment(selectedAppointment.id);
-                    }}
-                    disabled={loading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Mark as Complete</span>
-                  </button>
-                )}
+              <div className="pt-4 border-t border-gray-200 space-y-2">
+                <p className="text-xs text-gray-500">
+                  {selectedAppointment.status === 'pending'
+                    ? 'You can confirm or cancel this appointment. Confirm will ask you to verify first.'
+                    : selectedAppointment.status === 'confirmed'
+                    ? 'You can mark this appointment as completed. We will ask you to confirm and enter blood units.'
+                    : 'Are you sure you want to update this appointment?'}
+                </p>
+                <div className="flex flex-col space-y-2">
+                  {selectedAppointment.status === 'pending' && (
+                    <>
+                      {!confirmingConfirm ? (
+                        <div className="flex space-x-3">
+                          <button 
+                            onClick={() => {
+                              setConfirmingConfirm(true);
+                            }}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Confirm</span>
+                          </button>
+                          <button 
+                            onClick={() => {
+                              handleCloseModal();
+                              handleCancelAppointment(selectedAppointment.id);
+                            }}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Cancel</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-3">
+                          <p className="text-xs text-yellow-800 font-medium flex items-center">
+                            <AlertCircle className="w-4 h-4 mr-1.5" />
+                            Are you sure you want to mark this appointment as confirmed?
+                          </p>
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={() => {
+                                handleCloseModal();
+                                handleConfirmAppointment(selectedAppointment.id);
+                                setConfirmingConfirm(false);
+                              }}
+                              disabled={loading}
+                              className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              <span>Yes, confirm</span>
+                            </button>
+                            <button
+                              onClick={() => setConfirmingConfirm(false)}
+                              disabled={loading}
+                              className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              <span>No, go back</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {selectedAppointment.status === 'confirmed' && (
+                    <>
+                      {!confirmingComplete ? (
+                        <div className="flex space-x-3">
+                          <button 
+                            onClick={() => {
+                              setConfirmingComplete(true);
+                            }}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Mark as Complete</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-3">
+                          <p className="text-xs text-blue-800 font-medium flex items-center">
+                            <AlertCircle className="w-4 h-4 mr-1.5" />
+                            Are you sure you want to mark this appointment as completed?
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                            <div className="md:col-span-1">
+                              <label className="block text-xs font-medium text-gray-700 mb-1" htmlFor="completionUnits">
+                                Blood units
+                              </label>
+                              <input
+                                id="completionUnits"
+                                type="number"
+                                min="1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                value={completionUnits}
+                                onChange={(e) => setCompletionUnits(e.target.value)}
+                              />
+                            </div>
+                            <div className="md:col-span-2 flex space-x-3">
+                              <button
+                                onClick={() => {
+                                  handleCloseModal();
+                                  handleCompleteAppointment(selectedAppointment.id, completionUnits);
+                                  setConfirmingComplete(false);
+                                }}
+                                disabled={loading || !completionUnits}
+                                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Yes, complete</span>
+                              </button>
+                              <button
+                                onClick={() => setConfirmingComplete(false)}
+                                disabled={loading}
+                                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                <span>No, go back</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

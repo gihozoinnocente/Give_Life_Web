@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Bell, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Bell, AlertCircle, CheckCircle, X, Clock, XCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import notificationService from '../services/notificationService';
+import * as requestService from '../services/requestService';
 
 function HospitalBloodRequest() {
   const navigate = useNavigate();
@@ -11,6 +12,9 @@ function HospitalBloodRequest() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [requestsError, setRequestsError] = useState(null);
+  const [requests, setRequests] = useState([]);
   
   const [formData, setFormData] = useState({
     bloodType: '',
@@ -72,6 +76,38 @@ function HospitalBloodRequest() {
       setIsLoading(false);
     }
   };
+
+  // Fetch all requests created by this hospital
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoadingRequests(true);
+        const hospitalId = user?.id;
+        if (!hospitalId) return;
+        const data = await requestService.getHospitalRequests(hospitalId);
+        // Normalize shape for rendering
+        const normalized = data.map((r) => ({
+          id: r.id,
+          bloodType: r.blood_type,
+          units: r.units_needed,
+          urgency: (r.urgency || 'normal').toLowerCase(),
+          status: r.status,
+          requestedAt: new Date(r.created_at),
+          patientName: r.patient_condition || 'Patient',
+        }));
+        setRequests(normalized);
+        setRequestsError(null);
+      } catch (err) {
+        console.error('Failed to fetch hospital requests:', err);
+        setRequestsError('Failed to load your requests');
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+    if (user?.id) {
+      fetchRequests();
+    }
+  }, [user?.id, showSuccess]);
 
   if (!user || user.role !== 'hospital') {
     navigate('/login');
@@ -342,13 +378,75 @@ function HospitalBloodRequest() {
           </form>
         </div>
 
-        {/* Active Requests */}
+        {/* All Requests for this Hospital */}
         <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Your Active Requests</h3>
-          <div className="text-center py-8 text-gray-500">
-            <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>No active blood requests at the moment</p>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Your Blood Requests</h3>
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="text-sm font-medium text-red-600 hover:text-red-700"
+            >
+              Refresh
+            </button>
           </div>
+
+          {loadingRequests ? (
+            <div className="text-center py-12 text-gray-500">
+              <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>Loading your requests...</p>
+            </div>
+          ) : requestsError ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-800">
+                <p className="font-medium mb-1">Error</p>
+                <p>{requestsError}</p>
+              </div>
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>No blood requests have been created yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {requests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                      <span className="text-red-700 font-bold text-lg">{request.bloodType}</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p className="font-semibold text-gray-900">{request.patientName}</p>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${request.urgency === 'critical' ? 'bg-red-600 text-white' : request.urgency === 'urgent' ? 'bg-orange-500 text-white' : request.urgency === 'normal' ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'}`}>
+                          {request.urgency.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {request.units} {request.units === 1 ? 'unit' : 'units'} • {request.requestedAt.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    {request.status === 'fulfilled' ? (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : request.status === 'cancelled' ? (
+                      <XCircle className="w-5 h-5 text-red-600" />
+                    ) : (
+                      <Clock className="w-5 h-5 text-yellow-600" />
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${request.status === 'fulfilled' ? 'bg-green-100 text-green-800' : request.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

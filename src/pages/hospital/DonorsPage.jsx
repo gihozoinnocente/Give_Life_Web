@@ -11,7 +11,7 @@ function DonorsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [expandedDonorId, setExpandedDonorId] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Close modal when clicking backdrop or pressing Escape
   useEffect(() => {

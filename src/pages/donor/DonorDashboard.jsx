@@ -20,7 +20,7 @@ function DonorDashboard() {
       try {
         setLoading(true);
         setError('');
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const API_URL = import.meta.env.VITE_API_URL;
 
         // Donations for stats and recent (with auth headers)
         const donRes = await fetch(`${API_URL}/api/donations/donor/${user.id}`, {

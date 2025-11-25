@@ -16,7 +16,7 @@ function MyDonations() {
         setLoading(true);
         setError('');
         // Use backend endpoint /api/donations/donor/:donorId
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const API_URL = import.meta.env.VITE_API_URL;
         const res = await fetch(`${API_URL}/api/donations/donor/${user.id}`);
         const data = await res.json();
         if (data.status === 'success') {

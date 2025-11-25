@@ -35,6 +35,7 @@ jobs:
       run: npm run build
       env:
         NODE_ENV: production
+        VITE_API_URL: https://givelifeapi.up.railway.app
     
     - name: Upload build artifacts
       uses: actions/upload-pages-artifact@v3

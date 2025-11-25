@@ -163,7 +163,7 @@ const hospitalService = {
 };
 
 export const getRecognitionStats = async (hospitalId) => {
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app';
   try {
     const res = await fetch(`${API_URL}/api/hospitals/${hospitalId}/recognition`);
     const data = await res.json();

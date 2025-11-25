@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base API URL - update this to match your backend
-const API_URL = `${import.meta.env.VITE_API_URL}/api`;
+// Base API URL - fallback to production API URL if VITE_API_URL is not set
+const API_URL = `${import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app'}/api`;
 
 /**
  * Hospital Dashboard Service

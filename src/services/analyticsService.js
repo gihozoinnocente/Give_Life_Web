@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL;
+// Fallback to production API URL if VITE_API_URL is not set
+const API_URL = import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app';
 
 /**
  * Get hospital dashboard statistics

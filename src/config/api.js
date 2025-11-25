@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// Fallback to production API URL if VITE_API_URL is not set
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app';
 
 export const API_URL = `${API_BASE_URL}/api`;
 

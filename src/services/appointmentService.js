@@ -3,7 +3,8 @@
  * Handles all API calls related to appointments
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// Fallback to production API URL if VITE_API_URL is not set
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app';
 const API_URL = `${API_BASE_URL}/api/appointments`;
 
 /**

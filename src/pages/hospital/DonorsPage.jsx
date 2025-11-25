@@ -11,7 +11,7 @@ function DonorsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [expandedDonorId, setExpandedDonorId] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || 'https://givelifeapi.up.railway.app';
 
   // Close modal when clicking backdrop or pressing Escape
   useEffect(() => {

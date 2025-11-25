@@ -10,6 +10,15 @@ class AdminService {
     const res = await api.post(API_ENDPOINTS.ADMIN_CREATE_HOSPITAL, payload);
     return res.data.data;
   }
+
+  async resetUserPassword(email, newPassword, confirmPassword) {
+    const res = await api.post(API_ENDPOINTS.ADMIN_RESET_PASSWORD, {
+      email,
+      newPassword,
+      confirmPassword,
+    });
+    return res.data;
+  }
 }
 
 export default new AdminService();

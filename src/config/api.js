@@ -68,6 +68,7 @@ export const API_ENDPOINTS = {
   // Admin endpoints
   ADMIN_LIST_HOSPITALS: '/admin/hospitals',
   ADMIN_CREATE_HOSPITAL: '/admin/hospitals',
+  ADMIN_RESET_PASSWORD: '/admin/reset-password',
   
   // Notification endpoints
   CREATE_BLOOD_REQUEST: '/notifications/blood-request',

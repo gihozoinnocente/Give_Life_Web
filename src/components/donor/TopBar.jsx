@@ -8,10 +8,19 @@ import { fetchUnreadCount } from '../../features/notifications/notificationSlice
 function TopBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => {
+    console.log('Auth state:', state.auth);
+    console.log('User object:', state.auth.user);
+    console.log('User keys:', state.auth.user ? Object.keys(state.auth.user) : 'No user data');
+    return state.auth;
+  });
   const { unreadCount } = useSelector((state) => state.notifications);
   const [messages] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useEffect(() => {
+    console.log('User data in TopBar:', user);
+  }, [user]);
 
   useEffect(() => {
     if (user?.id) {
@@ -77,8 +86,12 @@ function TopBar() {
             className="flex items-center space-x-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg transition focus:outline-none"
           >
             <div className="hidden md:block text-right">
-              <p className="text-sm font-semibold text-gray-900">{user?.name || 'Donor'}</p>
-              <p className="text-xs text-gray-500">Blood Type: {user?.bloodType || 'O+'}</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {user?.firstName || user?.fullName || user?.name || user?.username || 'User'}
+              </p>
+              <p className="text-xs text-gray-500">
+                Blood Type: {user?.bloodGroup || user?.bloodType || 'Not specified'}
+              </p>
             </div>
             <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
               {user?.name?.charAt(0) || 'D'}
